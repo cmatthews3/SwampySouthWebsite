@@ -134,7 +134,7 @@ Subsequent pushes to the linked branch redeploy. The volume persists.
 1. **Logo**. User is still working on one. Decide whether to revive `Logomark.astro` or drop in a new mark and matching favicon.
 2. **Railway volume**. Required in prod so the subscribers CSV survives deploys. Mount at `/data`.
 3. **`SUBSCRIBERS_DOWNLOAD_TOKEN`**. Generate a long random string and set in Railway env vars before relying on the download endpoint.
-4. **Domain**. `astro.config.mjs` does not set a `site:` value yet. `Layout.astro` falls back to `https://swampysouth.com` for the canonical URL. Update both once the real domain is wired up.
+4. **Domain**. Set to `https://swampysouthlabs.com` in `astro.config.mjs` (as `site:`) and as the fallback in `src/layouts/Layout.astro`. Update both if the domain ever changes.
 5. **Open Graph image**. None yet. If desired, drop `public/og.png` (1200x630) and add a `<meta property="og:image">` to `Layout.astro`.
 6. **Full launch page**. When the studio is ready to talk about products, re-import `About.astro` and `Products.astro` in `src/pages/index.astro` and review the drafted copy. The "Support the work" link to `chris-matthews.me/support` would also typically go in the footer at that point.
 

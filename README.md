@@ -1,6 +1,6 @@
 # Swampy South Labs landing
 
-A single-page Astro site for swampysouth.com. Server-rendered, deployed to Railway. The email signup writes to a CSV on disk; download it later with an authenticated endpoint.
+A single-page Astro site for swampysouthlabs.com. Server-rendered, deployed to Railway. The email signup writes to a CSV on disk; download it later with an authenticated endpoint.
 
 ## Stack
 
@@ -104,7 +104,7 @@ Things to review:
 
 - **`SUBSCRIBERS_DOWNLOAD_TOKEN`**. Pick a long random string. Set in `.env` locally and in Railway env vars.
 - **Railway Volume**. Required in production so the CSV isn't wiped on every deploy.
-- **Site domain in `Layout.astro`**. `Astro.site` falls back to `https://swampysouth.com` for the canonical URL. If the real domain is different, set it in `astro.config.mjs` via `site: 'https://yourdomain.com'`.
+- **Site domain**. Set to `https://swampysouthlabs.com` in `astro.config.mjs` and as the fallback in `src/layouts/Layout.astro`. Change both if the domain ever moves.
 - **Open Graph image**. None included. If you want one, add `public/og.png` (1200x630) and a `<meta property="og:image">` tag in `Layout.astro`.
 - **Launch timing copy**. The subhead says "More soon." Adjust if you want a specific month or different phrasing.
 - **Favicon**. A stand-in based on the (now-hidden) logomark. Replace `public/favicon.svg` with a final asset when ready.
