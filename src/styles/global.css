@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-cream text-ink font-sans;
+    font-feature-settings: 'ss01', 'cv11';
+  }
+
+  ::selection {
+    background-color: rgba(79, 106, 85, 0.25);
+  }
+
+  a {
+    @apply underline decoration-moss/40 decoration-1 underline-offset-4 transition-colors;
+  }
+
+  a:hover {
+    @apply decoration-moss-deep;
+  }
+}

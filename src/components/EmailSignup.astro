@@ -1,0 +1,94 @@
+---
+---
+
+<section id="signup" class="py-10 sm:py-14">
+  <div class="mx-auto max-w-prose px-6">
+    <p class="text-lg leading-relaxed text-ink/80">
+      Drop your email below and I'll send a single note when there's something to see. No marketing emails, no upsells.
+    </p>
+
+    <form
+      id="signup-form"
+      action="/api/subscribe"
+      method="post"
+      class="mt-8 flex flex-col sm:flex-row gap-3"
+      novalidate
+    >
+      <label for="email" class="sr-only">Email address</label>
+      <input
+        type="email"
+        id="email"
+        name="email"
+        required
+        autocomplete="email"
+        placeholder="you@somewhere.com"
+        class="flex-1 rounded-md border border-ink/15 bg-white/60 px-4 py-3 text-base text-ink placeholder:text-ink/40 focus:border-moss focus:outline-none focus:ring-2 focus:ring-moss/30"
+      />
+      <button
+        type="submit"
+        class="rounded-md bg-moss-deep px-5 py-3 text-base font-medium text-cream no-underline hover:bg-ink transition-colors disabled:opacity-50"
+      >
+        Send me the launch note
+      </button>
+    </form>
+
+    <p
+      id="signup-status"
+      class="mt-4 text-sm text-ink/70 min-h-[1.25rem]"
+      role="status"
+      aria-live="polite"
+    >
+    </p>
+  </div>
+</section>
+
+<script is:inline>
+  (function () {
+    const form = document.getElementById('signup-form');
+    const status = document.getElementById('signup-status');
+    if (!form || !status) return;
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('subscribed') === 'ok') {
+      status.textContent = "Thanks. I'll be in touch when there's something worth sharing.";
+      form.style.display = 'none';
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const button = form.querySelector('button[type="submit"]');
+      const emailInput = form.querySelector('input[name="email"]');
+      const email = emailInput && emailInput.value ? emailInput.value.trim() : '';
+
+      if (!email) {
+        status.textContent = 'A working email helps.';
+        return;
+      }
+
+      if (button) button.disabled = true;
+      status.textContent = 'Sending...';
+
+      try {
+        const res = await fetch('/api/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (res.ok) {
+          status.textContent = "Thanks. I'll be in touch when there's something worth sharing.";
+          form.reset();
+          form.style.display = 'none';
+        } else {
+          status.textContent =
+            (data && data.message) || 'Something went sideways. Try again in a minute?';
+          if (button) button.disabled = false;
+        }
+      } catch (_err) {
+        status.textContent = "Couldn't reach the server. Try again in a minute?";
+        if (button) button.disabled = false;
+      }
+    });
+  })();
+</script>
