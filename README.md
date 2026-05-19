@@ -1,24 +1,23 @@
 # Swampy South Labs landing
 
-A single-page Astro site for swampysouthlabs.com. Server-rendered, deployed to Railway. The email signup writes each address to a Google Sheet via the Sheets API.
+A single-page Astro site for swampysouthlabs.com. Server-rendered, deployed to Railway. The email signup writes to a CSV on disk; download it later with an authenticated endpoint.
 
 ## Stack
 
 - Astro 4 with TypeScript
 - Tailwind CSS
 - `@astrojs/node` in standalone mode (real server, not static)
-- `google-auth-library` for service-account auth, raw `fetch` for the Sheets REST API
 - Fraunces + Inter (Google Fonts)
 
 ## Local development
 
 ```bash
 npm install
-cp .env.example .env   # fill in GOOGLE_SHEETS_ID and GOOGLE_SERVICE_ACCOUNT_JSON
+cp .env.example .env   # fill in SUBSCRIBERS_DOWNLOAD_TOKEN
 npm run dev            # http://localhost:4321
 ```
 
-The dev server reads `.env` automatically. Without the Google env vars set, the form will render fine but `POST /api/subscribe` returns a 500 (with the email logged to stderr so you can recover it).
+The dev server reads `.env` automatically. By default subscribers are written to `./data/subscribers.csv`. That directory is gitignored.
 
 ## Build and run locally
 
@@ -31,49 +30,27 @@ npm start              # serves dist/server/entry.mjs
 
 ## How signups are stored
 
-`POST /api/subscribe` validates the email, then calls the Google Sheets API:
+`POST /api/subscribe` appends a row to a CSV at `$SUBSCRIBERS_FILE` (default `./data/subscribers.csv`). Two columns: `timestamp,email`. Duplicate emails are silently ignored. The file and its parent directory are created on demand.
 
-1. **Read** column B of the `Subscribers` tab to build a set of existing emails (case-insensitive).
-2. If the email is new, **append** a row `[<ISO timestamp>, <email>]` to the bottom of the `Subscribers` tab.
-3. Duplicates are silently treated as success.
+No third-party email service. No data ever leaves the server.
 
-No third-party email service. The data lives in your Google Sheet.
+### Pulling the list
 
-If anything in step 1 or 2 throws (network error, quota, auth failure), the email is logged to stderr alongside the error so you can recover it from Railway logs.
+Set `SUBSCRIBERS_DOWNLOAD_TOKEN` to any long random string, then hit:
 
-## Google setup (one-time)
+```
+GET https://yourdomain.com/api/subscribers.csv?token=<the-token>
+```
 
-You need a Google Cloud service account that can write to your sheet.
+The route returns the full CSV as a download. The token can also be passed via the `x-subscribers-token` header. If the env var is unset, the endpoint returns 503 (disabled).
 
-### 1. Create the sheet
+Suggested way to generate a token:
 
-1. New Google Sheet at https://sheets.google.com.
-2. Rename the first tab to `Subscribers` (exact, case-sensitive).
-3. Optional: put `timestamp` in A1 and `email` in B1 as headers. Data is appended after the last filled row, so headers won't interfere.
-4. Copy the Sheet ID from the URL: `https://docs.google.com/spreadsheets/d/<this-part>/edit`.
+```bash
+openssl rand -hex 32
+```
 
-### 2. Create the service account
-
-1. Go to https://console.cloud.google.com.
-2. Create a new project (or pick an existing one).
-3. Enable the **Google Sheets API**: APIs & Services -> Library -> search "Google Sheets API" -> Enable.
-4. APIs & Services -> Credentials -> Create Credentials -> **Service account**.
-5. Give it a name like `swampy-south-signups`. Skip the optional role grants. Done.
-6. Click into the new service account -> Keys tab -> Add Key -> Create new key -> JSON. A JSON file downloads.
-
-### 3. Share the sheet with the service account
-
-1. Open the JSON file. Find the `client_email` field. It looks like `swampy-south-signups@your-project.iam.gserviceaccount.com`.
-2. In the Google Sheet, click Share, paste that email, give it **Editor** access. Uncheck "Notify people" since the service account doesn't have an inbox.
-
-### 4. Set env vars
-
-| Name | Value |
-|---|---|
-| `GOOGLE_SHEETS_ID` | The ID from the sheet URL |
-| `GOOGLE_SERVICE_ACCOUNT_JSON` | The full contents of the JSON file you downloaded |
-
-For `GOOGLE_SERVICE_ACCOUNT_JSON`, paste the file contents as-is. Railway accepts multi-line values. The `\n` escape sequences inside the `private_key` field will survive `JSON.parse` and become real newlines for the PEM parser.
+You can also pull the file directly from the Railway volume via `railway run cat /data/subscribers.csv` or the Railway dashboard's volume browser if you'd rather skip the HTTP route.
 
 ## Deploy to Railway
 
@@ -82,24 +59,27 @@ For `GOOGLE_SERVICE_ACCOUNT_JSON`, paste the file contents as-is. Railway accept
 3. In the Railway service settings:
    - **Build command:** `npm run build`
    - **Start command:** `npm start`
-4. Set the following environment variables in the Railway dashboard:
+4. **Attach a volume** so the subscribers file survives deploys:
+   - Service settings -> Volumes -> Create volume.
+   - Mount path: `/data`.
+5. Set the following environment variables in the Railway dashboard:
 
    | Name | Value | Notes |
    |---|---|---|
-   | `GOOGLE_SHEETS_ID` | (your sheet ID) | From the sheet URL |
-   | `GOOGLE_SERVICE_ACCOUNT_JSON` | (paste the JSON) | The full service account key file contents |
+   | `SUBSCRIBERS_FILE` | `/data/subscribers.csv` | Path inside the mounted volume |
+   | `SUBSCRIBERS_DOWNLOAD_TOKEN` | (long random string) | Generate with `openssl rand -hex 32` |
    | `HOST` | `0.0.0.0` | Required so the container accepts external traffic |
    | `NODE_ENV` | `production` | Optional but recommended |
 
    You do **not** need to set `PORT`. Railway injects it automatically and the Astro node adapter picks it up.
 
-5. Add a public domain in Railway (`Settings -> Networking -> Generate Domain` or add a custom domain).
+6. Add a public domain in Railway (`Settings -> Networking -> Generate Domain` or add a custom domain).
 
-That's it. Every push to the linked branch redeploys.
+That's it. After the first build, every push to the linked branch redeploys. The volume persists across deploys.
 
 ### Why `output: 'server'` and not a static build
 
-`src/pages/api/subscribe.ts` calls the Google Sheets API server-side so the service account key never reaches the browser. That requires SSR, which is why we use `@astrojs/node` in `standalone` mode.
+`src/pages/api/subscribe.ts` runs server-side so it can write to disk. The CSV download route needs to read from disk too. Both require SSR, which is why we use `@astrojs/node` in `standalone` mode.
 
 ## Project layout
 
@@ -109,7 +89,9 @@ src/
   layouts/Layout.astro
   pages/
     index.astro
-    api/subscribe.ts     POST: validate + append to Google Sheet
+    api/
+      subscribe.ts          POST: append to CSV
+      subscribers.csv.ts    GET:  download CSV (token-gated)
   styles/global.css
 public/favicon.svg
 astro.config.mjs
@@ -120,7 +102,8 @@ tailwind.config.mjs
 
 Things to review:
 
-- **Google Sheet, service account, env vars** (see "Google setup" above). The form returns 500 until these are in place.
+- **`SUBSCRIBERS_DOWNLOAD_TOKEN`**. Pick a long random string. Set in `.env` locally and in Railway env vars.
+- **Railway Volume**. Required in production so the CSV isn't wiped on every deploy.
 - **Site domain**. Set to `https://swampysouthlabs.com` in `astro.config.mjs` and as the fallback in `src/layouts/Layout.astro`. Change both if the domain ever moves.
 - **Open Graph image**. None included. If you want one, add `public/og.png` (1200x630) and a `<meta property="og:image">` tag in `Layout.astro`.
 - **Launch timing copy**. The subhead says "More soon." Adjust if you want a specific month or different phrasing.
