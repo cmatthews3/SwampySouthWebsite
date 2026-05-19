@@ -68,6 +68,8 @@ You can also pull the file directly from the Railway volume via `railway run cat
    |---|---|---|
    | `SUBSCRIBERS_FILE` | `/data/subscribers.csv` | Path inside the mounted volume |
    | `SUBSCRIBERS_DOWNLOAD_TOKEN` | (long random string) | Generate with `openssl rand -hex 32` |
+   | `UMAMI_SCRIPT_URL` | `https://your-umami-host/script.js` | Full URL to your self-hosted Umami `script.js` |
+   | `UMAMI_WEBSITE_ID` | (your website UUID) | From the Umami admin panel |
    | `HOST` | `0.0.0.0` | Required so the container accepts external traffic |
    | `NODE_ENV` | `production` | Optional but recommended |
 

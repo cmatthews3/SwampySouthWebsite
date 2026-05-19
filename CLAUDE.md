@@ -103,11 +103,17 @@ The brief was explicit. Every copy edit must follow these:
 |---|---|---|
 | `SUBSCRIBERS_FILE` | `.env` locally, Railway dashboard in prod | Path to the CSV. Default `./data/subscribers.csv`. In prod, point at the mounted Railway volume (e.g. `/data/subscribers.csv`). |
 | `SUBSCRIBERS_DOWNLOAD_TOKEN` | `.env` locally, Railway dashboard in prod | Long random string. Required to enable `/api/subscribers.csv`. Generate with `openssl rand -hex 32`. |
+| `UMAMI_SCRIPT_URL` | Railway dashboard (optional in dev) | Full URL to the Umami `script.js` on the self-hosted instance. |
+| `UMAMI_WEBSITE_ID` | Railway dashboard (optional in dev) | Website UUID from Umami's admin panel. |
 | `HOST` | Railway dashboard | Set to `0.0.0.0` so the container accepts external traffic |
 | `PORT` | Auto-injected by Railway | Don't set manually in prod |
 | `NODE_ENV` | Optional | Recommended to set to `production` in Railway |
 
 `.env.example` is committed. `.env` is gitignored. `data/` is gitignored.
+
+### Analytics
+
+Self-hosted Umami. The `<script defer src=... data-website-id=...>` tag in `Layout.astro` renders only when both `UMAMI_SCRIPT_URL` and `UMAMI_WEBSITE_ID` are set. Leaving either blank locally is the easy way to disable analytics in dev. Umami is cookieless, so no cookie banner is needed.
 
 ## Deploy to Railway
 
@@ -141,6 +147,6 @@ Subsequent pushes to the linked branch redeploy. The volume persists.
 ## Things to be careful about
 
 - Don't run `git add -A`/`git add .` blindly. The `.gitignore` covers `.env`, `node_modules`, `dist`, and `.astro`, but explicit staging keeps accidents off the table.
-- Don't add analytics or a cookie banner without a reason. The brief said no.
+- Self-hosted Umami is wired in (see "Analytics" above). It's cookieless, so no cookie banner is needed. Don't swap it for an analytics tool that requires a banner without checking first.
 - Don't add chat widgets, fake testimonials, customer logos, or metrics. The brief said no.
 - Don't introduce em dashes when editing copy. Linters won't catch them. Search for `—` before committing copy changes.

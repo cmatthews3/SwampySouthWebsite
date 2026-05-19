@@ -12,6 +12,10 @@ const {
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://swampysouthlabs.com').toString();
+
+const umamiScriptUrl = process.env.UMAMI_SCRIPT_URL;
+const umamiWebsiteId = process.env.UMAMI_WEBSITE_ID;
+const umamiEnabled = !!(umamiScriptUrl && umamiWebsiteId);
 ---
 
 <!doctype html>
@@ -46,6 +50,10 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://swampysouth
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap"
     />
+
+    {umamiEnabled && (
+      <script defer src={umamiScriptUrl} data-website-id={umamiWebsiteId}></script>
+    )}
   </head>
   <body class="min-h-screen flex flex-col">
     <slot />
