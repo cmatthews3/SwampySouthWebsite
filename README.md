@@ -1,6 +1,6 @@
 # Swampy South Labs landing
 
-A single page Astro site for swampysouth.com. Server-rendered, deployed to Railway, email signup posts to Buttondown.
+A single-page Astro site for swampysouth.com. Server-rendered, deployed to Railway. The email signup writes to a CSV on disk; download it later with an authenticated endpoint.
 
 ## Stack
 
@@ -13,11 +13,11 @@ A single page Astro site for swampysouth.com. Server-rendered, deployed to Railw
 
 ```bash
 npm install
-cp .env.example .env   # fill in BUTTONDOWN_API_KEY
+cp .env.example .env   # fill in SUBSCRIBERS_DOWNLOAD_TOKEN
 npm run dev            # http://localhost:4321
 ```
 
-The dev server reads `.env` automatically. Without `BUTTONDOWN_API_KEY` the form will still render, but `POST /api/subscribe` will return a 500.
+The dev server reads `.env` automatically. By default subscribers are written to `./data/subscribers.csv`. That directory is gitignored.
 
 ## Build and run locally
 
@@ -28,6 +28,30 @@ npm start              # serves dist/server/entry.mjs
 
 `npm start` runs `node ./dist/server/entry.mjs`. The Astro node adapter reads `HOST` and `PORT` from the environment.
 
+## How signups are stored
+
+`POST /api/subscribe` appends a row to a CSV at `$SUBSCRIBERS_FILE` (default `./data/subscribers.csv`). Two columns: `timestamp,email`. Duplicate emails are silently ignored. The file and its parent directory are created on demand.
+
+No third-party email service. No data ever leaves the server.
+
+### Pulling the list
+
+Set `SUBSCRIBERS_DOWNLOAD_TOKEN` to any long random string, then hit:
+
+```
+GET https://yourdomain.com/api/subscribers.csv?token=<the-token>
+```
+
+The route returns the full CSV as a download. The token can also be passed via the `x-subscribers-token` header. If the env var is unset, the endpoint returns 503 (disabled).
+
+Suggested way to generate a token:
+
+```bash
+openssl rand -hex 32
+```
+
+You can also pull the file directly from the Railway volume via `railway run cat /data/subscribers.csv` or the Railway dashboard's volume browser if you'd rather skip the HTTP route.
+
 ## Deploy to Railway
 
 1. Push the repo to GitHub (or use `railway up`).
@@ -35,32 +59,27 @@ npm start              # serves dist/server/entry.mjs
 3. In the Railway service settings:
    - **Build command:** `npm run build`
    - **Start command:** `npm start`
-   - **Watch paths:** default is fine.
-4. Set the following environment variables in the Railway dashboard:
+4. **Attach a volume** so the subscribers file survives deploys:
+   - Service settings -> Volumes -> Create volume.
+   - Mount path: `/data`.
+5. Set the following environment variables in the Railway dashboard:
 
    | Name | Value | Notes |
    |---|---|---|
-   | `BUTTONDOWN_API_KEY` | (your key) | From buttondown.com -> Settings -> API |
+   | `SUBSCRIBERS_FILE` | `/data/subscribers.csv` | Path inside the mounted volume |
+   | `SUBSCRIBERS_DOWNLOAD_TOKEN` | (long random string) | Generate with `openssl rand -hex 32` |
    | `HOST` | `0.0.0.0` | Required so the container accepts external traffic |
    | `NODE_ENV` | `production` | Optional but recommended |
 
    You do **not** need to set `PORT`. Railway injects it automatically and the Astro node adapter picks it up.
 
-5. Add a public domain in Railway (`Settings -> Networking -> Generate Domain` or add a custom domain).
+6. Add a public domain in Railway (`Settings -> Networking -> Generate Domain` or add a custom domain).
 
-That's it. After the first build, every push to the linked branch redeploys.
+That's it. After the first build, every push to the linked branch redeploys. The volume persists across deploys.
 
 ### Why `output: 'server'` and not a static build
 
-`src/pages/api/subscribe.ts` runs server-side so the Buttondown API key never reaches the browser. That requires SSR, which is why we use `@astrojs/node` in `standalone` mode.
-
-## Buttondown setup
-
-1. Sign up at https://buttondown.com.
-2. `Settings -> API -> API key`. Copy it.
-3. Set it as `BUTTONDOWN_API_KEY` locally (in `.env`) and on Railway.
-
-The form posts JSON `{ "email": "..." }` to `/api/subscribe`. The server-side handler calls `POST https://api.buttondown.email/v1/subscribers` with the `Authorization: Token <key>` header. Already-subscribed emails are treated as success.
+`src/pages/api/subscribe.ts` runs server-side so it can write to disk. The CSV download route needs to read from disk too. Both require SSR, which is why we use `@astrojs/node` in `standalone` mode.
 
 ## Project layout
 
@@ -70,7 +89,9 @@ src/
   layouts/Layout.astro
   pages/
     index.astro
-    api/subscribe.ts
+    api/
+      subscribe.ts          POST: append to CSV
+      subscribers.csv.ts    GET:  download CSV (token-gated)
   styles/global.css
 public/favicon.svg
 astro.config.mjs
@@ -79,14 +100,14 @@ tailwind.config.mjs
 
 ## Placeholders to fill in
 
-Things I guessed or stubbed that you should review:
+Things to review:
 
-- **`BUTTONDOWN_API_KEY`**. Not committed. Set in `.env` locally and in Railway env vars.
+- **`SUBSCRIBERS_DOWNLOAD_TOKEN`**. Pick a long random string. Set in `.env` locally and in Railway env vars.
+- **Railway Volume**. Required in production so the CSV isn't wiped on every deploy.
 - **Site domain in `Layout.astro`**. `Astro.site` falls back to `https://swampysouth.com` for the canonical URL. If the real domain is different, set it in `astro.config.mjs` via `site: 'https://yourdomain.com'`.
 - **Open Graph image**. None included. If you want one, add `public/og.png` (1200x630) and a `<meta property="og:image">` tag in `Layout.astro`.
-- **Launch timing copy**. The subhead says "The site lands later this year." Adjust if you want a specific month or a vaguer phrasing.
-- **Footer copy**. `Support the work` links to `https://chris-matthews.me/support`. Change the link text if you want it more or less prominent.
-- **Favicon**. A stand-in based on the logomark. Replace `public/favicon.svg` with a final asset when ready.
+- **Launch timing copy**. The subhead says "More soon." Adjust if you want a specific month or different phrasing.
+- **Favicon**. A stand-in based on the (now-hidden) logomark. Replace `public/favicon.svg` with a final asset when ready.
 
 ### Unused stubs
 

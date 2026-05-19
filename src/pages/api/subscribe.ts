@@ -1,8 +1,82 @@
 import type { APIRoute } from 'astro';
+import { promises as fs } from 'node:fs';
+import { dirname } from 'node:path';
 
 export const prerender = false;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const DEFAULT_FILE = './data/subscribers.csv';
+const CSV_HEADER = 'timestamp,email\n';
+
+function getFilePath(): string {
+  return process.env.SUBSCRIBERS_FILE || DEFAULT_FILE;
+}
+
+function csvEscape(value: string): string {
+  return /[,"\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
+}
+
+function parseCsvRow(line: string): string[] {
+  const out: string[] = [];
+  let cur = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (line[i + 1] === '"') {
+          cur += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        cur += ch;
+      }
+    } else if (ch === ',') {
+      out.push(cur);
+      cur = '';
+    } else if (ch === '"' && cur === '') {
+      inQuotes = true;
+    } else {
+      cur += ch;
+    }
+  }
+  out.push(cur);
+  return out;
+}
+
+async function ensureFile(path: string): Promise<void> {
+  await fs.mkdir(dirname(path), { recursive: true });
+  try {
+    await fs.access(path);
+  } catch {
+    await fs.writeFile(path, CSV_HEADER, 'utf8');
+  }
+}
+
+async function alreadySubscribed(path: string, email: string): Promise<boolean> {
+  let content: string;
+  try {
+    content = await fs.readFile(path, 'utf8');
+  } catch {
+    return false;
+  }
+  const needle = email.toLowerCase();
+  const lines = content.split(/\r?\n/);
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line) continue;
+    const cols = parseCsvRow(line);
+    if (cols[1] && cols[1].toLowerCase() === needle) return true;
+  }
+  return false;
+}
+
+async function appendSubscriber(path: string, email: string): Promise<void> {
+  const row = `${new Date().toISOString()},${csvEscape(email)}\n`;
+  await fs.appendFile(path, row, 'utf8');
+}
 
 async function readEmail(request: Request): Promise<string | null> {
   const contentType = request.headers.get('content-type') || '';
@@ -44,9 +118,7 @@ function redirectResponse(url: string): Response {
   return new Response(null, { status: 303, headers: { location: url } });
 }
 
-export const POST: APIRoute = async ({ request, redirect }) => {
-  const apiKey = import.meta.env.BUTTONDOWN_API_KEY ?? process.env.BUTTONDOWN_API_KEY;
-
+export const POST: APIRoute = async ({ request }) => {
   const email = await readEmail(request);
   const asJson = wantsJson(request);
 
@@ -54,70 +126,27 @@ export const POST: APIRoute = async ({ request, redirect }) => {
     if (asJson) {
       return jsonResponse(400, { ok: false, message: 'That email address looks off.' });
     }
-    return redirect('/?subscribed=invalid#signup', 303);
+    return redirectResponse('/?subscribed=invalid#signup');
   }
 
-  if (!apiKey) {
-    console.error('BUTTONDOWN_API_KEY is not set.');
-    if (asJson) {
-      return jsonResponse(500, {
-        ok: false,
-        message: 'Signups are temporarily down. Try again shortly.',
-      });
-    }
-    return redirect('/?subscribed=error#signup', 303);
-  }
+  const path = getFilePath();
 
   try {
-    const res = await fetch('https://api.buttondown.email/v1/subscribers', {
-      method: 'POST',
-      headers: {
-        Authorization: `Token ${apiKey}`,
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({ email_address: email }),
-    });
-
-    if (res.ok || res.status === 201) {
-      if (asJson) return jsonResponse(200, { ok: true });
-      return redirectResponse('/?subscribed=ok#signup');
+    await ensureFile(path);
+    const dup = await alreadySubscribed(path, email);
+    if (!dup) {
+      await appendSubscriber(path, email);
     }
-
-    // Buttondown returns 400 for already-subscribed in some cases.
-    // Treat duplicates as success from the user's perspective.
-    let payload: { detail?: string; code?: string } = {};
-    try {
-      payload = (await res.json()) as typeof payload;
-    } catch {
-      /* ignore */
-    }
-
-    const detail = (payload.detail || '').toLowerCase();
-    const code = (payload.code || '').toLowerCase();
-    const alreadySubscribed =
-      res.status === 400 &&
-      (detail.includes('already') || code.includes('already') || code.includes('exists'));
-
-    if (alreadySubscribed) {
-      if (asJson) return jsonResponse(200, { ok: true, alreadySubscribed: true });
-      return redirectResponse('/?subscribed=ok#signup');
-    }
-
-    console.error('Buttondown error', res.status, payload);
     if (asJson) {
-      return jsonResponse(502, {
-        ok: false,
-        message: "Couldn't reach the mailing list service. Try again in a minute?",
-      });
+      return jsonResponse(200, { ok: true, alreadySubscribed: dup });
     }
-    return redirectResponse('/?subscribed=error#signup');
+    return redirectResponse('/?subscribed=ok#signup');
   } catch (err) {
     console.error('Subscribe handler failed', err);
     if (asJson) {
       return jsonResponse(500, {
         ok: false,
-        message: 'Something went sideways on our end.',
+        message: "Couldn't save that just now. Try again in a minute?",
       });
     }
     return redirectResponse('/?subscribed=error#signup');
