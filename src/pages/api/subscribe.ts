@@ -1,81 +1,88 @@
 import type { APIRoute } from 'astro';
-import { promises as fs } from 'node:fs';
-import { dirname } from 'node:path';
+import { JWT } from 'google-auth-library';
 
 export const prerender = false;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const DEFAULT_FILE = './data/subscribers.csv';
-const CSV_HEADER = 'timestamp,email\n';
+const SHEET_TAB = 'Subscribers';
+const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
-function getFilePath(): string {
-  return process.env.SUBSCRIBERS_FILE || DEFAULT_FILE;
+interface ServiceAccount {
+  client_email: string;
+  private_key: string;
 }
 
-function csvEscape(value: string): string {
-  return /[,"\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
-}
+let cachedClient: JWT | null = null;
 
-function parseCsvRow(line: string): string[] {
-  const out: string[] = [];
-  let cur = '';
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (inQuotes) {
-      if (ch === '"') {
-        if (line[i + 1] === '"') {
-          cur += '"';
-          i++;
-        } else {
-          inQuotes = false;
-        }
-      } else {
-        cur += ch;
-      }
-    } else if (ch === ',') {
-      out.push(cur);
-      cur = '';
-    } else if (ch === '"' && cur === '') {
-      inQuotes = true;
-    } else {
-      cur += ch;
-    }
-  }
-  out.push(cur);
-  return out;
-}
-
-async function ensureFile(path: string): Promise<void> {
-  await fs.mkdir(dirname(path), { recursive: true });
+function getClient(): JWT {
+  if (cachedClient) return cachedClient;
+  const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  if (!raw) throw new Error('GOOGLE_SERVICE_ACCOUNT_JSON is not set');
+  let creds: ServiceAccount;
   try {
-    await fs.access(path);
-  } catch {
-    await fs.writeFile(path, CSV_HEADER, 'utf8');
+    creds = JSON.parse(raw);
+  } catch (err) {
+    throw new Error(`GOOGLE_SERVICE_ACCOUNT_JSON is not valid JSON: ${(err as Error).message}`);
   }
+  if (!creds.client_email || !creds.private_key) {
+    throw new Error('GOOGLE_SERVICE_ACCOUNT_JSON is missing client_email or private_key');
+  }
+  cachedClient = new JWT({
+    email: creds.client_email,
+    key: creds.private_key,
+    scopes: SCOPES,
+  });
+  return cachedClient;
 }
 
-async function alreadySubscribed(path: string, email: string): Promise<boolean> {
-  let content: string;
-  try {
-    content = await fs.readFile(path, 'utf8');
-  } catch {
-    return false;
-  }
-  const needle = email.toLowerCase();
-  const lines = content.split(/\r?\n/);
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i];
-    if (!line) continue;
-    const cols = parseCsvRow(line);
-    if (cols[1] && cols[1].toLowerCase() === needle) return true;
-  }
-  return false;
+async function getAccessToken(): Promise<string> {
+  const client = getClient();
+  const res = await client.getAccessToken();
+  if (!res.token) throw new Error('Google auth returned no access token');
+  return res.token;
 }
 
-async function appendSubscriber(path: string, email: string): Promise<void> {
-  const row = `${new Date().toISOString()},${csvEscape(email)}\n`;
-  await fs.appendFile(path, row, 'utf8');
+async function readExistingEmails(spreadsheetId: string, token: string): Promise<Set<string>> {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(
+    spreadsheetId,
+  )}/values/${encodeURIComponent(`${SHEET_TAB}!B:B`)}`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`Sheets read failed: ${res.status} ${body}`);
+  }
+  const data = (await res.json()) as { values?: string[][] };
+  const set = new Set<string>();
+  for (const row of data.values ?? []) {
+    const cell = row[0];
+    if (cell) set.add(cell.toLowerCase().trim());
+  }
+  return set;
+}
+
+async function appendRow(
+  spreadsheetId: string,
+  token: string,
+  timestamp: string,
+  email: string,
+): Promise<void> {
+  const range = `${SHEET_TAB}!A:B`;
+  const url =
+    `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}` +
+    `/values/${encodeURIComponent(range)}:append` +
+    `?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ values: [[timestamp, email]] }),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`Sheets append failed: ${res.status} ${body}`);
+  }
 }
 
 async function readEmail(request: Request): Promise<string | null> {
@@ -129,20 +136,33 @@ export const POST: APIRoute = async ({ request }) => {
     return redirectResponse('/?subscribed=invalid#signup');
   }
 
-  const path = getFilePath();
+  const spreadsheetId = process.env.GOOGLE_SHEETS_ID;
+  if (!spreadsheetId) {
+    console.error('GOOGLE_SHEETS_ID is not set. Email not saved:', email);
+    if (asJson) {
+      return jsonResponse(500, {
+        ok: false,
+        message: 'Signups are temporarily down. Try again shortly.',
+      });
+    }
+    return redirectResponse('/?subscribed=error#signup');
+  }
 
   try {
-    await ensureFile(path);
-    const dup = await alreadySubscribed(path, email);
+    const token = await getAccessToken();
+    const existing = await readExistingEmails(spreadsheetId, token);
+    const dup = existing.has(email.toLowerCase());
     if (!dup) {
-      await appendSubscriber(path, email);
+      await appendRow(spreadsheetId, token, new Date().toISOString(), email);
     }
     if (asJson) {
       return jsonResponse(200, { ok: true, alreadySubscribed: dup });
     }
     return redirectResponse('/?subscribed=ok#signup');
   } catch (err) {
-    console.error('Subscribe handler failed', err);
+    // Log with the email so the address can be recovered from Railway logs
+    // if the Sheets API is temporarily unavailable.
+    console.error('Subscribe handler failed for', email, err);
     if (asJson) {
       return jsonResponse(500, {
         ok: false,

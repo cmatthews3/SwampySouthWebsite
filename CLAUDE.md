@@ -1,6 +1,6 @@
 # Swampy South Labs Website
 
-Coming-soon landing page for Swampy South Labs, an independent software studio in New Orleans. Server-rendered Astro site, deployed to Railway. The email signup writes addresses to a CSV on disk; a token-gated download endpoint exposes that CSV.
+Coming-soon landing page for Swampy South Labs, an independent software studio in New Orleans. Server-rendered Astro site, deployed to Railway. The email signup writes each address to a Google Sheet via the Sheets API, authenticated with a service account.
 
 This file is for whoever (human or Claude) picks this project up next. Read it before making changes so the voice and tech decisions stay coherent.
 
@@ -9,11 +9,12 @@ This file is for whoever (human or Claude) picks this project up next. Read it b
 - **Astro 4** with TypeScript and strict tsconfig.
 - **Tailwind CSS** via `@astrojs/tailwind`. Base styles live in `src/styles/global.css`; the integration is configured with `applyBaseStyles: false` so the layout owns the cascade.
 - **`@astrojs/node` in `standalone` mode** for SSR. `npm start` runs `node ./dist/server/entry.mjs`. The adapter reads `HOST` and `PORT` from the environment.
+- **`google-auth-library`** for the service-account JWT. Sheets API itself is called via raw `fetch` (no full `googleapis` mega-package).
 - **Fonts**: Fraunces (serif) for the wordmark and headlines, Inter (sans) for body. Loaded from Google Fonts with `preconnect` and `display=swap`.
 
 ### Why SSR instead of a static build
 
-Both API routes need server access: `/api/subscribe` appends to a CSV file on disk, and `/api/subscribers.csv` reads from it. That requires `output: 'server'` in `astro.config.mjs`, which is why the project uses `@astrojs/node` rather than a static-only output.
+`/api/subscribe` needs to call the Google Sheets API from the server so the service account key never reaches the browser. That requires `output: 'server'` in `astro.config.mjs`, which is why the project uses `@astrojs/node` rather than a static-only output.
 
 ## Project layout
 
@@ -29,14 +30,11 @@ src/
   layouts/Layout.astro
   pages/
     index.astro
-    api/
-      subscribe.ts          POST: validate + append to CSV
-      subscribers.csv.ts    GET:  token-gated CSV download
+    api/subscribe.ts        POST: validate + append to Google Sheet
   styles/global.css
   env.d.ts
 public/favicon.svg
 .claude/launch.json     dev server config for the Claude Code preview
-data/                   gitignored. Local subscribers.csv lives here in dev.
 ```
 
 ### Unused stubs
@@ -59,16 +57,18 @@ The original brief described a fuller launch page (about copy, three product blu
 
 1. Form submits JSON `{ email }` to `POST /api/subscribe`.
 2. The route validates the address against a basic regex.
-3. If valid, it ensures the CSV file exists (creating `data/` and the file with a header if needed), checks the existing rows for a case-insensitive duplicate, and appends `<ISO timestamp>,<email>` if new.
+3. If valid, it gets a Google service-account access token (cached by `google-auth-library`), reads column B of the `Subscribers` tab for an existing match (case-insensitive), and appends a new row `[<ISO timestamp>, <email>]` if not found.
 4. Already-subscribed emails are silently treated as success so the user sees a positive confirmation either way.
 5. The form falls back to a standard form submit when JS is disabled. The route then 303-redirects to `/?subscribed=ok#signup` and the page shows the success state from the query param.
 6. On success the form hides and the status line shows "Thanks. I'll be in touch when there's something worth sharing."
 
+### Error handling
+
+If the Sheets API call fails (network, quota, auth), the route logs the email alongside the error and returns 500 with a friendly message. The email itself shows up in Railway logs (`console.error('Subscribe handler failed for', email, err)`) so you can recover any signup that didn't make it into the sheet.
+
 ### Pulling the list
 
-`GET /api/subscribers.csv` returns the file as a CSV download, gated by `SUBSCRIBERS_DOWNLOAD_TOKEN`. Pass the token via `?token=...` or `x-subscribers-token: ...`. Comparison is constant-time via `crypto.timingSafeEqual`. If the env var is unset, the endpoint returns 503.
-
-You can also bypass the route entirely and read the file directly from the Railway volume (CLI or dashboard).
+Just open the Google Sheet. That's the whole UX. No download endpoint, no token to manage.
 
 ## Design tokens
 
@@ -101,24 +101,32 @@ The brief was explicit. Every copy edit must follow these:
 
 | Var | Where | Notes |
 |---|---|---|
-| `SUBSCRIBERS_FILE` | `.env` locally, Railway dashboard in prod | Path to the CSV. Default `./data/subscribers.csv`. In prod, point at the mounted Railway volume (e.g. `/data/subscribers.csv`). |
-| `SUBSCRIBERS_DOWNLOAD_TOKEN` | `.env` locally, Railway dashboard in prod | Long random string. Required to enable `/api/subscribers.csv`. Generate with `openssl rand -hex 32`. |
+| `GOOGLE_SHEETS_ID` | `.env` locally, Railway dashboard in prod | The ID from the sheet URL (the bit between `/d/` and `/edit`). |
+| `GOOGLE_SERVICE_ACCOUNT_JSON` | `.env` locally, Railway dashboard in prod | Full contents of the service account JSON key file. Pasted as-is. `JSON.parse` handles the `\n` escapes inside `private_key`. |
 | `HOST` | Railway dashboard | Set to `0.0.0.0` so the container accepts external traffic |
 | `PORT` | Auto-injected by Railway | Don't set manually in prod |
 | `NODE_ENV` | Optional | Recommended to set to `production` in Railway |
 
-`.env.example` is committed. `.env` is gitignored. `data/` is gitignored.
+`.env.example` is committed. `.env` is gitignored.
+
+### Google Cloud setup (one-time)
+
+1. Create a Google Sheet, rename the first tab to `Subscribers` (exact, case-sensitive).
+2. In Google Cloud Console: create a project, enable the **Google Sheets API**, create a service account, generate a JSON key.
+3. Open the JSON file, find `client_email`, share the sheet with that address as **Editor**.
+4. Paste the JSON into `GOOGLE_SERVICE_ACCOUNT_JSON` and the sheet ID into `GOOGLE_SHEETS_ID`.
+
+Detailed walkthrough lives in `README.md` under "Google setup".
 
 ## Deploy to Railway
 
 1. Push to GitHub.
 2. New Railway service from the repo.
 3. Build command: `npm run build`. Start command: `npm start`.
-4. **Attach a volume** (service settings -> Volumes -> Create volume, mount path `/data`). Without this, the subscribers CSV is wiped on every deploy.
-5. Set the env vars above in the Railway dashboard, including `SUBSCRIBERS_FILE=/data/subscribers.csv`.
-6. Generate or attach a domain.
+4. Set the env vars above in the Railway dashboard.
+5. Generate or attach a domain.
 
-Subsequent pushes to the linked branch redeploy. The volume persists.
+No volume needed. Subscriber data lives in Google Sheets, not on disk.
 
 ## Local commands
 
@@ -132,11 +140,10 @@ Subsequent pushes to the linked branch redeploy. The volume persists.
 ## Open items
 
 1. **Logo**. User is still working on one. Decide whether to revive `Logomark.astro` or drop in a new mark and matching favicon.
-2. **Railway volume**. Required in prod so the subscribers CSV survives deploys. Mount at `/data`.
-3. **`SUBSCRIBERS_DOWNLOAD_TOKEN`**. Generate a long random string and set in Railway env vars before relying on the download endpoint.
-4. **Domain**. Set to `https://swampysouthlabs.com` in `astro.config.mjs` (as `site:`) and as the fallback in `src/layouts/Layout.astro`. Update both if the domain ever changes.
-5. **Open Graph image**. None yet. If desired, drop `public/og.png` (1200x630) and add a `<meta property="og:image">` to `Layout.astro`.
-6. **Full launch page**. When the studio is ready to talk about products, re-import `About.astro` and `Products.astro` in `src/pages/index.astro` and review the drafted copy. The "Support the work" link to `chris-matthews.me/support` would also typically go in the footer at that point.
+2. **Google setup**. Sheet created with `Subscribers` tab, service account created, sheet shared with the service account email, `GOOGLE_SHEETS_ID` and `GOOGLE_SERVICE_ACCOUNT_JSON` set in Railway.
+3. **Domain**. Set to `https://swampysouthlabs.com` in `astro.config.mjs` (as `site:`) and as the fallback in `src/layouts/Layout.astro`. Update both if the domain ever changes.
+4. **Open Graph image**. None yet. If desired, drop `public/og.png` (1200x630) and add a `<meta property="og:image">` to `Layout.astro`.
+5. **Full launch page**. When the studio is ready to talk about products, re-import `About.astro` and `Products.astro` in `src/pages/index.astro` and review the drafted copy. The "Support the work" link to `chris-matthews.me/support` would also typically go in the footer at that point.
 
 ## Things to be careful about
 
