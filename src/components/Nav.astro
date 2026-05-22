@@ -35,8 +35,10 @@
     display: flex; align-items: center; gap: 14px;
     font-family: 'Rubik', sans-serif; font-weight: 700; font-size: 22px;
     letter-spacing: -0.02em; color: var(--bayou);
+    white-space: nowrap;
   }
   nav.top .brand .m {
+    flex: none;
     width: 44px; height: 44px;
     background: url('/assets/mark.svg') center/contain no-repeat;
   }
@@ -55,11 +57,26 @@
     background: var(--bayou); color: var(--bone);
     transition: background var(--t-fast);
     letter-spacing: -0.005em;
+    white-space: nowrap;
   }
   nav.top .cta:hover { background: #000; }
 
   @media (max-width: 900px) {
     nav.top ul { display: none; }
+    /* The desktop grid (1fr auto 1fr) forces the brand into half the width
+       and wraps the wordmark on phones. Drop back to flex space-between
+       and scale the brand down to fit. */
+    nav.top .row {
+      display: flex;
+      justify-content: space-between;
+    }
+    nav.top .brand {
+      font-size: 17px;
+      gap: 10px;
+    }
+    nav.top .brand .m {
+      width: 32px; height: 32px;
+    }
   }
 </style>
 
