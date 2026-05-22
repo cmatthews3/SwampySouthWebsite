@@ -1,4 +1,5 @@
 ---
+const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xlgvbylk';
 ---
 
 <section class="block contact-section" id="contact">
@@ -18,7 +19,7 @@
       <form
         id="contact-form"
         class="contact-form reveal d1"
-        action="/api/contact"
+        action={FORMSPREE_ENDPOINT}
         method="post"
         novalidate
       >
@@ -34,6 +35,7 @@
           <label for="f-msg">Note</label>
           <textarea id="f-msg" name="message" rows="4" placeholder="Tell us about the project or problem." required></textarea>
         </div>
+        <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true" class="honeypot" />
         <div class="actions">
           <button class="btn btn-on-moss" type="submit">Send <span class="arrow">→</span></button>
         </div>
@@ -142,6 +144,14 @@
     color: rgba(245, 241, 230, 0.75);
   }
 
+  .honeypot {
+    position: absolute;
+    left: -10000px;
+    top: auto;
+    width: 1px; height: 1px;
+    overflow: hidden;
+  }
+
   .reveal { opacity: 0; transform: translateY(20px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
   .reveal.in { opacity: 1; transform: none; }
   .reveal.d1 { transition-delay: .08s; }
@@ -157,15 +167,7 @@
     const status = document.getElementById('contact-status');
     if (!form || !status) return;
 
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('contact') === 'ok') {
-      status.textContent = "Sent. We'll be in touch.";
-      form.style.display = 'none';
-    } else if (params.get('contact') === 'invalid') {
-      status.textContent = 'Something in those fields looks off. Try again?';
-    } else if (params.get('contact') === 'error') {
-      status.textContent = "Couldn't save that just now. Try again in a minute?";
-    }
+    const endpoint = form.getAttribute('action') || '';
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -189,12 +191,11 @@
       status.textContent = '';
 
       try {
-        const res = await fetch('/api/contact', {
+        const res = await fetch(endpoint, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-          body: JSON.stringify({ name, email, message }),
+          headers: { Accept: 'application/json' },
+          body: data,
         });
-        const body = await res.json().catch(() => ({}));
 
         if (res.ok) {
           if (button) button.innerHTML = 'Sent <span class="arrow">✓</span>';
@@ -204,8 +205,11 @@
             form.style.display = 'none';
           }, 600);
         } else {
-          status.textContent =
-            (body && body.message) || 'Something went sideways. Try again in a minute?';
+          const body = (await res.json().catch(() => null)) as
+            | { errors?: Array<{ message?: string }> }
+            | null;
+          const firstError = body?.errors?.[0]?.message;
+          status.textContent = firstError || 'Something went sideways. Try again in a minute?';
           if (button) {
             button.disabled = false;
             button.innerHTML = original;
