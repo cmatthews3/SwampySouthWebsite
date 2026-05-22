@@ -1,6 +1,6 @@
 # Swampy South Labs Website
 
-Marketing site for Swampy South Labs, an independent software studio in New Orleans. Server-rendered Astro site, deployed to Railway. The contact form on the landing page writes submissions to a CSV on disk; a token-gated download endpoint exposes that CSV. A separate newsletter signup endpoint also exists but is no longer wired into a page.
+Marketing site for Swampy South Labs, an independent software studio in New Orleans. Server-rendered Astro site, deployed to Railway. The contact form on the landing page posts directly to Formspree; submissions land in the Formspree dashboard and the configured notification inbox. A separate newsletter signup endpoint also exists on the server but is no longer wired into a page.
 
 This file is for whoever (human or Claude) picks the project up next. Read it before making changes so the voice and tech decisions stay coherent.
 
@@ -13,7 +13,7 @@ This file is for whoever (human or Claude) picks the project up next. Read it be
 
 ### Why SSR instead of a static build
 
-Both forms need server access. `/api/contact` and `/api/subscribe` append to CSV files on disk; `/api/contact-messages.csv` and `/api/subscribers.csv` read from them under a token. That requires `output: 'server'` in `astro.config.mjs`, which is why the project uses `@astrojs/node` rather than a static-only output.
+The legacy newsletter endpoint (`/api/subscribe`) appends to a CSV file on disk; `/api/subscribers.csv` reads from it under a token. That requires `output: 'server'` in `astro.config.mjs`, which is why the project uses `@astrojs/node` rather than a static-only output. If those endpoints get removed, the site can move back to a static build.
 
 ## Project layout
 
@@ -32,8 +32,6 @@ src/
   pages/
     index.astro
     api/
-      contact.ts                  POST: validate + append to contact CSV
-      contact-messages.csv.ts     GET:  token-gated contact CSV download
       subscribe.ts                POST: validate + append to subscriber CSV (no longer surfaced on the page)
       subscribers.csv.ts          GET:  token-gated subscriber CSV download
   styles/
@@ -45,7 +43,7 @@ public/
     mark.svg             gator/lab mark, used in the nav, hero watermark, and as the favicon
     logo-full.svg        full lockup (not currently referenced on the page)
 .claude/launch.json      dev server config for the Claude Code preview
-data/                    gitignored. Local subscribers.csv and contact-messages.csv live here in dev.
+data/                    gitignored. Local subscribers.csv lives here in dev.
 design_handoff_landing_page/   design brief the page was built from (kept for reference).
 ```
 
@@ -68,15 +66,13 @@ The page mounts a shared scroll-reveal IntersectionObserver and smooth-anchor ha
 
 ## Contact form flow
 
-1. Form submits JSON `{ name, email, message }` to `POST /api/contact`.
-2. The route validates: name and message non-empty within sane caps, email passes a basic regex.
-3. If valid, it ensures the CSV file exists (creating `data/` and the file with a header if needed) and appends `<ISO timestamp>,<name>,<email>,<message>`. There's no dedupe, since the same person may write more than once.
-4. The form falls back to a standard form submit when JS is disabled. The route then 303-redirects to `/?contact=ok#contact` (or `=invalid` / `=error`) and the page renders the matching status line from the query param.
-5. On success the form hides and the status line shows "Sent. We'll be in touch."
+The contact form posts directly to a Formspree endpoint (`https://formspree.io/f/xlgvbylk`) defined in the frontmatter of `Contact.astro`. Submissions land in Formspree's dashboard and the configured notification inbox.
 
-### Pulling the list
+1. With JS enabled, the form submits via `fetch` as multipart form data with `Accept: application/json`. On success the form hides and the status line shows "Sent. We'll be in touch." On a Formspree validation error, the first error message is surfaced.
+2. With JS disabled, the form falls back to a standard POST and Formspree handles the response (its own thank-you page, or a redirect configured in the Formspree dashboard).
+3. A `_gotcha` honeypot input is included (off-screen) so naive spam bots that fill every field get silently dropped by Formspree.
 
-`GET /api/contact-messages.csv` returns the file as a CSV download, gated by `CONTACT_DOWNLOAD_TOKEN`. Pass the token via `?token=...` or `x-contact-token: ...`. Comparison is constant-time via `crypto.timingSafeEqual`. If the env var is unset, the endpoint returns 503. You can also bypass the route and read the file directly from the Railway volume.
+The endpoint URL is checked into the source. It is a public submission URL by design — Formspree's protection lives in their dashboard (allowed origins, reCAPTCHA, etc.), not in keeping the URL secret. Reconfigure those settings in the Formspree project, not in this repo.
 
 ## Newsletter signup (legacy)
 
@@ -122,8 +118,6 @@ See `design_handoff_landing_page/README.md` "Notes on Voice & Copy" and the `Bra
 
 | Var | Where | Notes |
 |---|---|---|
-| `CONTACT_FILE` | `.env` locally, Railway in prod | Path to the contact CSV. Default `./data/contact-messages.csv`. Point at the Railway volume in prod (e.g. `/data/contact-messages.csv`). |
-| `CONTACT_DOWNLOAD_TOKEN` | `.env` locally, Railway in prod | Long random string. Required to enable `/api/contact-messages.csv`. Generate with `openssl rand -hex 32`. |
 | `SUBSCRIBERS_FILE` | `.env` locally, Railway in prod | Path to the (legacy) subscribers CSV. Default `./data/subscribers.csv`. |
 | `SUBSCRIBERS_DOWNLOAD_TOKEN` | `.env` locally, Railway in prod | Long random string. Required to enable `/api/subscribers.csv`. |
 | `UMAMI_SCRIPT_URL` | Railway (optional in dev) | Full URL to the Umami `script.js` on the self-hosted instance. |
@@ -143,8 +137,8 @@ Self-hosted Umami. The `<script defer src=... data-website-id=...>` tag in `Layo
 1. Push to GitHub.
 2. New Railway service from the repo (or push to the linked branch on an existing service).
 3. Build command: `npm run build`. Start command: `npm start`.
-4. **Attach a volume** (service settings → Volumes → Create volume, mount path `/data`). Without this, the CSVs are wiped on every deploy.
-5. Set the env vars above in the Railway dashboard, including `CONTACT_FILE=/data/contact-messages.csv` and `SUBSCRIBERS_FILE=/data/subscribers.csv`.
+4. **Attach a volume** (service settings → Volumes → Create volume, mount path `/data`) if you're keeping the legacy newsletter endpoint live. Without the volume, the subscribers CSV is wiped on every deploy.
+5. Set the env vars above in the Railway dashboard. If using the legacy newsletter endpoint, point `SUBSCRIBERS_FILE` at the mounted volume (e.g. `/data/subscribers.csv`).
 6. Generate or attach a domain.
 
 Subsequent pushes to the linked branch redeploy. The volume persists.
@@ -160,10 +154,10 @@ Subsequent pushes to the linked branch redeploy. The volume persists.
 
 ## Open items
 
-1. **Railway env vars**. Set `CONTACT_DOWNLOAD_TOKEN` (and keep `SUBSCRIBERS_DOWNLOAD_TOKEN` if you still need the legacy endpoint). Set `CONTACT_FILE=/data/contact-messages.csv` and `SUBSCRIBERS_FILE=/data/subscribers.csv` to land on the mounted volume.
+1. **Formspree project settings**. Lock down the project in Formspree's dashboard: restrict the allowed origin to the production domain, turn on reCAPTCHA or a similar bot filter, configure the destination email and the post-submit redirect URL.
 2. **Open Graph image**. None yet. If desired, drop `public/og.png` (1200×630) and add a `<meta property="og:image">` to `Layout.astro`. `public/assets/logo-full.svg` is a reasonable source.
 3. **Mobile nav**. The desktop link list is hidden on ≤ 900px with no replacement, matching the prototype. If a hamburger / drawer becomes worth it, add one to `Nav.astro`.
-4. **Newsletter endpoints**. `/api/subscribe` and `/api/subscribers.csv` are still live but unused. Decide whether to keep them as cold spares or delete them.
+4. **Newsletter endpoints**. `/api/subscribe` and `/api/subscribers.csv` are still live but unused. Decide whether to keep them as cold spares or delete them. If they go, the site can drop SSR and ship as a static build.
 5. **Accessibility**. The page is semantic HTML with reasonable focus states but hasn't been audited. Run through Lighthouse / axe before any big push.
 
 ## Things to be careful about
