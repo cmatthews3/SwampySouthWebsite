@@ -1,0 +1,78 @@
+---
+type Pillar = { title: string; body: string };
+
+const pillars: Pillar[] = [
+  {
+    title: 'Business Platforms.',
+    body: "The custom web application your business actually runs on — internal tools, customer portals, dashboards, the workflow that's currently a spreadsheet held together with macros. Built to last past the next reorg.",
+  },
+  {
+    title: 'Mobile Apps.',
+    body: "Native and cross-platform apps for iOS and Android. Built like products, not features — with the same engineering care we'd give a flagship of our own, regardless of audience size.",
+  },
+  {
+    title: 'Extended Reality.',
+    body: "AR, VR, and mixed-reality applications — for training, visualization, retail experiences, and the kind of work where a flat screen falls short. Quietly one of the most exciting things we do.",
+  },
+];
+
+const delayClass = ['', 'd1', 'd2'];
+---
+
+<section class="block block-light" id="services">
+  <div class="container">
+    <div class="section-head">
+      <h2 class="reveal">We also build<br />for <span class="amber">other people.</span></h2>
+    </div>
+
+    <div class="pillars">
+      {pillars.map((p, i) => (
+        <div class={`pillar reveal ${delayClass[i] ?? ''}`}>
+          <h3>{p.title}</h3>
+          <p>{p.body}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .container { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--pad); }
+
+  .block { padding: 140px 0; }
+  .block-light { background: var(--bone); }
+
+  .section-head { margin-bottom: 64px; }
+  .section-head h2 {
+    font-family: 'Rubik', sans-serif; font-weight: 600;
+    font-size: clamp(40px, 4.6vw, 56px);
+    line-height: 1.05; letter-spacing: -0.025em;
+    margin: 0; color: var(--bayou); max-width: 16ch;
+  }
+  .section-head h2 .amber { color: var(--amber-deep); }
+
+  .pillars {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 48px;
+  }
+  .pillar h3 {
+    font-family: 'Rubik', sans-serif; font-weight: 600;
+    font-size: 28px; line-height: 1.15; letter-spacing: -0.015em;
+    color: var(--bayou); margin: 16px 0 14px;
+  }
+  .pillar p { margin: 0; color: var(--ink-soft); font-size: 17px; line-height: 1.55; }
+  .pillar .tag {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--moss-deep);
+  }
+
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+  .reveal.d1 { transition-delay: .08s; }
+  .reveal.d2 { transition-delay: .16s; }
+
+  @media (max-width: 900px) {
+    .pillars { grid-template-columns: 1fr; gap: 40px; }
+  }
+</style>

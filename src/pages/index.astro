@@ -1,14 +1,49 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
 import Hero from '../components/Hero.astro';
-import EmailSignup from '../components/EmailSignup.astro';
+import Products from '../components/Products.astro';
+import Services from '../components/Services.astro';
+import Contact from '../components/Contact.astro';
 import Footer from '../components/Footer.astro';
 ---
 
 <Layout>
-  <main class="flex-1 flex flex-col justify-center">
-    <Hero />
-    <EmailSignup />
-  </main>
+  <Nav />
+  <Hero />
+  <Products />
+  <Services />
+  <Contact />
   <Footer />
 </Layout>
+
+<script>
+  // Scroll-reveal observer: shared across sections, runs once per element.
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in');
+          io.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.12, rootMargin: '0px 0px -40px 0px' },
+  );
+  document.querySelectorAll('.reveal').forEach((el) => {
+    if (!el.classList.contains('in')) io.observe(el);
+  });
+
+  // Smooth in-page anchor scrolling, offset by the fixed nav.
+  document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((a) => {
+    a.addEventListener('click', (event) => {
+      const href = a.getAttribute('href');
+      if (!href || href.length <= 1) return;
+      const target = document.querySelector(href);
+      if (!target) return;
+      event.preventDefault();
+      const top = target.getBoundingClientRect().top + window.scrollY - 60;
+      window.scrollTo({ top, behavior: 'smooth' });
+    });
+  });
+</script>

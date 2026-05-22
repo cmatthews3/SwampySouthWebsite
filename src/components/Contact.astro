@@ -1,0 +1,223 @@
+---
+---
+
+<section class="block contact-section" id="contact">
+  <div class="container">
+    <div class="section-head">
+      <h2 class="reveal">We're listening.<br /><span class="amber">Reach out.</span></h2>
+    </div>
+
+    <div class="contact-grid">
+      <div class="left reveal">
+        <p>If any of this resonates, reach out directly. No newsletter, no funnel, no nudges to your inbox.</p>
+        <div class="channels">
+          <a class="direct" href="mailto:info@swampysouthlabs.com">info@swampysouthlabs.com →</a>
+        </div>
+      </div>
+
+      <form
+        id="contact-form"
+        class="contact-form reveal d1"
+        action="/api/contact"
+        method="post"
+        novalidate
+      >
+        <div class="field">
+          <label for="f-name">Name</label>
+          <input id="f-name" name="name" type="text" placeholder="Your name" autocomplete="name" required />
+        </div>
+        <div class="field">
+          <label for="f-email">Email</label>
+          <input id="f-email" name="email" type="email" placeholder="you@company.com" autocomplete="email" required />
+        </div>
+        <div class="field">
+          <label for="f-msg">Note</label>
+          <textarea id="f-msg" name="message" rows="4" placeholder="Tell us about the project or problem." required></textarea>
+        </div>
+        <div class="actions">
+          <button class="btn btn-on-moss" type="submit">Send <span class="arrow">→</span></button>
+        </div>
+        <p
+          id="contact-status"
+          class="status-line"
+          role="status"
+          aria-live="polite"
+        ></p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<style>
+  .container { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--pad); }
+
+  .block { padding: 140px 0; }
+  .contact-section {
+    background: var(--moss-deep);
+    color: var(--bone);
+  }
+
+  .section-head { margin-bottom: 64px; }
+  .section-head h2 {
+    font-family: 'Rubik', sans-serif; font-weight: 600;
+    font-size: clamp(40px, 4.6vw, 56px);
+    line-height: 1.05; letter-spacing: -0.025em;
+    margin: 0; color: var(--bone); max-width: 16ch;
+  }
+  .section-head h2 .amber { color: var(--amber-warm); }
+
+  .contact-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 56px; align-items: start;
+  }
+  .contact-grid .left {
+    font-size: 19px; line-height: 1.55;
+    color: rgba(245, 241, 230, 0.85);
+    max-width: 460px;
+  }
+  .contact-grid .left p { margin: 0; }
+  .contact-grid .left .channels { display: flex; flex-direction: column; gap: 12px; margin-top: 32px; }
+  .contact-grid .left .direct {
+    font-family: 'Rubik', sans-serif; font-weight: 500; font-size: 22px;
+    letter-spacing: -0.015em; color: var(--bone);
+    display: inline-flex; align-items: center; gap: 10px;
+    border-bottom: 1.5px solid rgba(245, 241, 230, 0.4);
+    padding-bottom: 4px;
+    transition: border-color var(--t-fast), color var(--t-fast);
+    width: fit-content;
+  }
+  .contact-grid .left .direct:hover {
+    border-color: var(--amber-warm); color: var(--amber-warm);
+  }
+
+  .contact-form { display: flex; flex-direction: column; gap: 16px; }
+  .field { display: flex; flex-direction: column; gap: 8px; }
+  .field label {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: rgba(245, 241, 230, 0.65);
+  }
+  .field input, .field textarea {
+    width: 100%; padding: 14px 0;
+    background: transparent;
+    border: 0;
+    border-bottom: 1.5px solid rgba(245, 241, 230, 0.25);
+    color: var(--bone);
+    font-family: 'Manrope', sans-serif; font-size: 17px;
+    border-radius: 0;
+    transition: border-color var(--t-fast);
+  }
+  .field input::placeholder, .field textarea::placeholder {
+    color: rgba(245, 241, 230, 0.35);
+  }
+  .field input:focus, .field textarea:focus {
+    outline: none; border-bottom-color: var(--amber-warm);
+  }
+  .field textarea { resize: vertical; min-height: 100px; }
+
+  .actions { margin-top: 12px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: 'Rubik', sans-serif; font-weight: 600;
+    font-size: 14px; padding: 13px 22px;
+    border: none; cursor: pointer; text-decoration: none;
+    transition: all var(--t-fast);
+    letter-spacing: -0.005em;
+  }
+  .btn .arrow {
+    font-family: 'JetBrains Mono', monospace; font-weight: 400;
+    transition: transform var(--t-fast);
+  }
+  .btn:hover .arrow { transform: translateX(3px); }
+  .btn-on-moss { background: var(--amber); color: var(--bayou); }
+  .btn-on-moss:hover { background: var(--amber-warm); }
+  .btn:disabled { opacity: 0.6; cursor: default; }
+
+  .status-line {
+    margin: 8px 0 0;
+    min-height: 1.25rem;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: rgba(245, 241, 230, 0.75);
+  }
+
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+  .reveal.d1 { transition-delay: .08s; }
+
+  @media (max-width: 900px) {
+    .contact-grid { grid-template-columns: 1fr; gap: 40px; }
+  }
+</style>
+
+<script>
+  (function () {
+    const form = document.getElementById('contact-form') as HTMLFormElement | null;
+    const status = document.getElementById('contact-status');
+    if (!form || !status) return;
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('contact') === 'ok') {
+      status.textContent = "Sent. We'll be in touch.";
+      form.style.display = 'none';
+    } else if (params.get('contact') === 'invalid') {
+      status.textContent = 'Something in those fields looks off. Try again?';
+    } else if (params.get('contact') === 'error') {
+      status.textContent = "Couldn't save that just now. Try again in a minute?";
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const button = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+      const original = button ? button.innerHTML : '';
+
+      const data = new FormData(form);
+      const name = String(data.get('name') || '').trim();
+      const email = String(data.get('email') || '').trim();
+      const message = String(data.get('message') || '').trim();
+
+      if (!name || !email || !message) {
+        status.textContent = 'Fill in name, email, and a note.';
+        return;
+      }
+
+      if (button) {
+        button.disabled = true;
+        button.innerHTML = 'Sending <span class="arrow">→</span>';
+      }
+      status.textContent = '';
+
+      try {
+        const res = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({ name, email, message }),
+        });
+        const body = await res.json().catch(() => ({}));
+
+        if (res.ok) {
+          if (button) button.innerHTML = 'Sent <span class="arrow">✓</span>';
+          status.textContent = "Sent. We'll be in touch.";
+          setTimeout(() => {
+            form.reset();
+            form.style.display = 'none';
+          }, 600);
+        } else {
+          status.textContent =
+            (body && body.message) || 'Something went sideways. Try again in a minute?';
+          if (button) {
+            button.disabled = false;
+            button.innerHTML = original;
+          }
+        }
+      } catch (_err) {
+        status.textContent = "Couldn't reach the server. Try again in a minute?";
+        if (button) {
+          button.disabled = false;
+          button.innerHTML = original;
+        }
+      }
+    });
+  })();
+</script>

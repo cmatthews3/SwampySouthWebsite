@@ -1,18 +1,86 @@
 ---
 ---
 
-<header class="pt-12 sm:pt-16 pb-6">
-  <div class="mx-auto max-w-prose px-6">
-    <span class="font-sans text-sm tracking-wide uppercase text-moss-deep/80">
-      Swampy South Labs
-    </span>
-
-    <h1 class="mt-12 font-serif text-5xl sm:text-6xl leading-[1.05] tracking-tight text-ink">
-      Coming soon.
-    </h1>
-
-    <p class="mt-6 font-serif text-xl sm:text-2xl leading-snug text-ink/80">
-      An independent software studio in New Orleans. More soon.
-    </p>
+<section class="hero" id="top">
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-text">
+        <h1 class="reveal in d1">Measured software<br />for the <span class="amber">work that matters.</span></h1>
+        <div class="hero-actions reveal in d2">
+          <a class="btn btn-primary" href="#contact">Get in touch <span class="arrow">→</span></a>
+          <a class="btn btn-ghost" href="#products">See what we're building</a>
+        </div>
+      </div>
+    </div>
   </div>
-</header>
+</section>
+
+<style>
+  .container { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--pad); }
+
+  .hero {
+    position: relative;
+    padding: calc(var(--nav-h) + 64px) 0 96px;
+    background: var(--moss);
+    color: var(--bone);
+    overflow: hidden;
+  }
+  .hero .hero-inner {
+    display: flex; flex-direction: column;
+    min-height: calc(100vh - var(--nav-h) - 160px);
+    justify-content: center;
+    position: relative; z-index: 2;
+  }
+  .hero-text { max-width: 900px; }
+  .hero-text h1 {
+    font-family: 'Rubik', sans-serif; font-weight: 700;
+    font-size: clamp(56px, 9vw, 132px);
+    line-height: 0.95; letter-spacing: -0.035em;
+    color: var(--bone); margin: 0 0 36px;
+  }
+  .hero-text h1 .amber { color: var(--amber-warm); }
+  .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: flex-start; }
+
+  /* Faint giant mark watermark behind the hero text */
+  .hero::after {
+    content: "";
+    position: absolute;
+    right: -4%; bottom: -22%;
+    width: 56%; aspect-ratio: 1;
+    background: url('/assets/mark.svg') center/contain no-repeat;
+    opacity: 0.08;
+    filter: brightness(1.5) saturate(0.5);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: 'Rubik', sans-serif; font-weight: 600;
+    font-size: 14px; padding: 13px 22px;
+    border: none; cursor: pointer; text-decoration: none;
+    transition: all var(--t-fast);
+    letter-spacing: -0.005em;
+  }
+  .btn .arrow {
+    font-family: 'JetBrains Mono', monospace; font-weight: 400;
+    transition: transform var(--t-fast);
+  }
+  .btn:hover .arrow { transform: translateX(3px); }
+  .btn-primary { background: var(--bayou); color: var(--bone); }
+  .btn-primary:hover { background: #000; }
+  .btn-ghost {
+    background: transparent; color: var(--bone);
+    border: 1.5px solid rgba(245, 241, 230, 0.4);
+  }
+  .btn-ghost:hover { border-color: var(--bone); }
+
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+  .reveal.d1 { transition-delay: .08s; }
+  .reveal.d2 { transition-delay: .16s; }
+
+  @media (max-width: 900px) {
+    .hero { padding: calc(var(--nav-h) + 64px) 0 80px; }
+  }
+</style>
