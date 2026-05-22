@@ -1,0 +1,26 @@
+:root {
+  --moss: #526b41;
+  --moss-deep: #3F4F1F;
+  --moss-soft: #8A9F5C;
+  --amber: #d9a628;
+  --amber-warm: #E0B647;
+  --amber-deep: #8E6E14;
+  --bone: #F5F1E6;
+  --moss-50: #EFEEDE;
+  --silt: #C9C7B5;
+  --bayou: #1A1F12;
+  --ink: #2A2E1C;
+  --ink-soft: #5C5E4B;
+
+  --maxw: 1180px;
+  --pad: 40px;
+  --nav-h: 64px;
+
+  --t-fast: 180ms cubic-bezier(.2,.7,.2,1);
+  --t-med:  420ms cubic-bezier(.2,.7,.2,1);
+  --t-slow: 720ms cubic-bezier(.2,.7,.2,1);
+}
+
+@media (max-width: 900px) {
+  :root { --pad: 24px; }
+}

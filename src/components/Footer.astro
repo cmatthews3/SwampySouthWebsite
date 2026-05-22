@@ -2,18 +2,53 @@
 const year = new Date().getFullYear();
 ---
 
-<footer class="py-12 sm:py-16 border-t border-ink/10">
-  <div class="mx-auto max-w-prose px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-sm text-ink/60">
-    <p>
-      &copy; {year} Swampy South Labs. New Orleans, LA.
-    </p>
-    <p>
-      <a
-        href="mailto:info@swampysouthlabs.com"
-        class="text-ink/60 hover:text-moss-deep"
-      >
-        info@swampysouthlabs.com
-      </a>
-    </p>
+<footer>
+  <div class="row">
+    <div class="name">Swampy South <span class="amber">Labs</span></div>
+    <ul>
+      <li><a href="#products">Products</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </div>
+  <div class="copy">
+    <span>© {year} Swampy South Labs · New Orleans, LA</span>
   </div>
 </footer>
+
+<style>
+  footer {
+    background: var(--bayou); color: rgba(245, 241, 230, 0.6);
+    padding: 56px var(--pad) 32px;
+  }
+  footer .row {
+    max-width: var(--maxw); margin: 0 auto;
+    display: flex; justify-content: space-between; align-items: center; gap: 24px;
+    flex-wrap: wrap;
+  }
+  footer .name {
+    font-family: 'Rubik', sans-serif; font-weight: 700; font-size: 18px;
+    letter-spacing: -0.02em; color: var(--bone);
+  }
+  footer .name .amber { color: var(--amber-warm); }
+  footer ul { list-style: none; padding: 0; margin: 0; display: flex; gap: 24px; }
+  footer ul a {
+    font-family: 'Manrope', sans-serif; font-size: 15px;
+    transition: color var(--t-fast);
+  }
+  footer ul a:hover { color: var(--amber-warm); }
+  footer .copy {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(245, 241, 230, 0.12);
+    max-width: var(--maxw); margin-left: auto; margin-right: auto;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500;
+    letter-spacing: 0.08em; text-transform: uppercase; color: rgba(245, 241, 230, 0.4);
+    display: flex; justify-content: space-between;
+  }
+
+  @media (max-width: 900px) {
+    footer .row { flex-direction: column; align-items: flex-start; }
+    footer .copy { flex-direction: column; gap: 12px; }
+  }
+</style>
