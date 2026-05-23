@@ -21,16 +21,19 @@ The legacy newsletter endpoint (`/api/subscribe`) appends to a CSV file on disk;
 src/
   components/
     Nav.astro              sticky top nav with scroll-aware active state
-    Hero.astro             moss-toned hero with headline + CTAs
-    Products.astro         four product rows on moss-50 background
-    Services.astro         three service pillars on bone background
+    Hero.astro             moss-toned hero with headline, lede, CTAs
+    Services.astro         three service pillars on bone background ("What we build")
+    HowWeWork.astro        four-step process section on moss-50 background
+    ProofBand.astro        short "we build for ourselves" section linking to /labs
+    WhoWeAre.astro         founder / studio intro on moss-50 background
     Contact.astro          contact form on cypress (moss-deep) background
     Footer.astro           bayou-dark footer
     About.astro            unused; drafted copy from the previous brief
     Logomark.astro         unused; old SVG mark
   layouts/Layout.astro
   pages/
-    index.astro
+    index.astro            services-led homepage
+    labs.astro             dedicated /labs page with active pilots + early-dev catalog
     api/
       subscribe.ts                POST: validate + append to subscriber CSV (no longer surfaced on the page)
       subscribers.csv.ts          GET:  token-gated subscriber CSV download
@@ -44,7 +47,7 @@ public/
     logo-full.svg        full lockup (not currently referenced on the page)
 .claude/launch.json      dev server config for the Claude Code preview
 data/                    gitignored. Local subscribers.csv lives here in dev.
-design_handoff_landing_page/   design brief the page was built from (kept for reference).
+design_handoff_landing_page/   original design brief, kept for reference.
 ```
 
 ### Unused stubs
@@ -53,16 +56,31 @@ design_handoff_landing_page/   design brief the page was built from (kept for re
 
 ## What the page is right now
 
-Single-page marketing site, six sections, top to bottom:
+Two pages: the services-led homepage and a dedicated `/labs` catalog page. Both share `Nav` and `Footer`.
 
-1. **Nav** — sticky 64px bar. Brand lockup on the left, three section anchors in the center (Products / Services / Contact), a "Get in touch" CTA on the right. Active link is highlighted on scroll. On screens ≤ 900px, the center link list hides and only the brand and CTA remain.
-2. **Hero** — full-bleed moss background, big two-line H1 ("Measured software / for the **work that matters.**"), two CTAs, a faint gator-mark watermark in the lower-right.
-3. **Products** — four cards on a moss-tinted (`--moss-50`) background. Each card has a number, category eyebrow, title, body paragraph, status pill, and an optional external link. Content is defined inline in the `Products.astro` frontmatter.
-4. **Services** — three pillars on the bone background. Titles only (no eyebrow tags). Content is defined inline in the `Services.astro` frontmatter.
-5. **Contact** — full-bleed `--moss-deep` background. Left column is a short paragraph and a direct mailto. Right column is the contact form (name, email, note).
-6. **Footer** — bayou-dark, brand lockup left, anchor list right, copyright row below.
+### Homepage (`/`)
 
-The page mounts a shared scroll-reveal IntersectionObserver and smooth-anchor handler in `src/pages/index.astro`. Per-section behavior (the nav's active-link tracker) lives in the relevant component's `<script>` tag.
+Top to bottom:
+
+1. **Nav** — sticky 64px bar. Brand lockup on the left, four section anchors in the center (Services / How we work / Labs / Contact), a "Get in touch" CTA on the right. Active link is highlighted on scroll. On screens ≤ 900px, the center link list hides and only the brand and CTA remain.
+2. **Hero** — full-bleed moss background, big two-line H1 ("Measured software / for the **work that matters.**"), a buyer-focused lede paragraph, two CTAs ("Start a project" / "See how we work"), faint gator-mark watermark in the lower-right.
+3. **Services** ("What we build") — three pillars on the bone background. Titles only (no eyebrow tags). Content in `Services.astro` frontmatter.
+4. **How we work** — four-step process on moss-50. Section heading "No black boxes. / No surprises at the end.", a short lede, then four numbered steps (real conversation, scoped first piece, built in the open, built to be handed off). Content in `HowWeWork.astro` frontmatter.
+5. **Proof band** — short "we build and run our own products" section on bone. Two pilot callouts (IEP Assist, Project Touchline) with a link out to `/labs`. Anchored with `id="labs"` so the nav's "Labs" link still scrolls to it if someone clicks before navigating; the link itself goes to `/labs`.
+6. **Who we are** — founder/studio intro on moss-50. **Currently contains bracketed placeholders** (`[Founder name]` and a one-sentence bio) that must be filled in before launch. The placeholders render visibly so they're easy to spot.
+7. **Contact** — full-bleed `--moss-deep` background. Left column is a short paragraph and a direct mailto. Right column is the contact form (name, email, "What are you trying to build?").
+8. **Footer** — bayou-dark, brand lockup left, anchor list right (Services / How we work / Labs / Contact), copyright row below.
+
+### Labs page (`/labs`)
+
+A single file at `src/pages/labs.astro`, not split into per-section components — the page is page-specific enough that inlining the sections is cleaner than spawning four new component files. Order:
+
+1. **Labs hero** — light background, eyebrow ("// The Labs"), H1 ("The Labs."), intro paragraph, working-titles note.
+2. **In active pilots** — moss-50, group header + two large product cards (IEP Assist, Project Touchline) with category eyebrow, body, status pill, and a "See it in action" link. The link `href` values still point at the raw dev URLs; per the brief, swap them for a controlled demo (video or polished screenshots) before launch. A `TODO` comment in the frontmatter calls this out.
+3. **In early development** — bone, group header + two cards (Project Winston, Project Reps). Same card shape, no external link.
+4. **Closing band** — moss-deep, short CTA ("See something here you'd want built for your own work?") with a "Start a project" button that anchors to `/#contact`.
+
+The page mounts its own shared scroll-reveal IntersectionObserver and smooth-anchor handler. The homepage does the same in `src/pages/index.astro`. Per-section behavior (the nav's active-link tracker) lives in `Nav.astro`'s `<script>` tag.
 
 ## Contact form flow
 
@@ -91,7 +109,7 @@ Defined as CSS custom properties in `src/styles/tokens.css`:
 | `--amber-warm` | `#E0B647` | Lighter amber. Hover state, hero accent on dark, contact section accents. |
 | `--amber-deep` | `#8E6E14` | Darker amber. Hover for text-only amber accents, amber on light backgrounds. |
 | `--bone` | `#F5F1E6` | Paper. Page background, services section, body text on dark. |
-| `--moss-50` | `#EFEEDE` | Reed, soft tint of bone. Products section background. |
+| `--moss-50` | `#EFEEDE` | Reed, soft tint of bone. How we work / Who we are background, Labs active-pilots section. |
 | `--silt` | `#C9C7B5` | Divider / border. |
 | `--bayou` | `#1A1F12` | Near-black with green undertone. Body text on light, footer, primary CTA. |
 | `--ink` | `#2A2E1C` | Default body text. |
@@ -154,11 +172,15 @@ Subsequent pushes to the linked branch redeploy. The volume persists.
 
 ## Open items
 
-1. **Formspree project settings**. Lock down the project in Formspree's dashboard: restrict the allowed origin to the production domain, turn on reCAPTCHA or a similar bot filter, configure the destination email and the post-submit redirect URL.
-2. **Open Graph image**. None yet. If desired, drop `public/og.png` (1200×630) and add a `<meta property="og:image">` to `Layout.astro`. `public/assets/logo-full.svg` is a reasonable source.
-3. **Mobile nav**. The desktop link list is hidden on ≤ 900px with no replacement, matching the prototype. If a hamburger / drawer becomes worth it, add one to `Nav.astro`.
-4. **Newsletter endpoints**. `/api/subscribe` and `/api/subscribers.csv` are still live but unused. Decide whether to keep them as cold spares or delete them. If they go, the site can drop SSR and ship as a static build.
-5. **Accessibility**. The page is semantic HTML with reasonable focus states but hasn't been audited. Run through Lighthouse / axe before any big push.
+1. **"Who we are" personal-background line**. `WhoWeAre.astro` has the founder name (Christopher Matthews) filled in but still ships with `[Personal background — one or two honest sentences about where you came from and why you started this.]` rendered visibly. Replace before the site goes public. The size-signaling copy from the original brief ("A small studio, on purpose" / "We stay small deliberately") was intentionally cut to match the project's "don't mention team size in either direction" voice rule.
+2. **Pricing anchor (optional)**. The services-led brief suggests one honest line in `HowWeWork.astro` ("Engagements typically start in the [X] range…"). Not included by default. Add it under the four numbered steps if you want a price anchor.
+3. **Labs demo links**. `src/pages/labs.astro` still points its "See it in action" CTAs at the raw dev URLs. Per the brief, swap these for a short demo video or polished screenshots before launch. A `TODO` comment in the page frontmatter flags this.
+4. **More-about-the-studio page**. The brief's "More about the studio →" CTA isn't wired in — there's no `/about` page yet. Either build one or drop the CTA.
+5. **Formspree project settings**. Lock down the project in Formspree's dashboard: restrict the allowed origin to the production domain, turn on reCAPTCHA or a similar bot filter, configure the destination email and the post-submit redirect URL.
+6. **Open Graph image**. None yet. If desired, drop `public/og.png` (1200×630) and add a `<meta property="og:image">` to `Layout.astro`. `public/assets/logo-full.svg` is a reasonable source.
+7. **Mobile nav**. The desktop link list is hidden on ≤ 900px with no replacement, matching the prototype. If a hamburger / drawer becomes worth it, add one to `Nav.astro`.
+8. **Newsletter endpoints**. `/api/subscribe` and `/api/subscribers.csv` are still live but unused. Decide whether to keep them as cold spares or delete them. If they go, the site can drop SSR and ship as a static build.
+9. **Accessibility**. The page is semantic HTML with reasonable focus states but hasn't been audited. Run through Lighthouse / axe before any big push.
 
 ## Things to be careful about
 

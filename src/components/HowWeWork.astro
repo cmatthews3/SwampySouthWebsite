@@ -1,0 +1,116 @@
+---
+type Step = { num: string; title: string; body: string };
+
+const steps: Step[] = [
+  {
+    num: '01',
+    title: 'A real conversation.',
+    body: "You tell us what you're trying to build and why. We tell you, honestly, whether we're the right shop for it — sometimes the answer is no, and we'll say so.",
+  },
+  {
+    num: '02',
+    title: 'A scoped first piece.',
+    body: "We'd rather prove the relationship on something concrete than sell you a twelve-month roadmap on day one. Most engagements begin with a clear, bounded first project.",
+  },
+  {
+    num: '03',
+    title: 'Built in the open.',
+    body: 'You see progress as it happens, not at a single nerve-wracking reveal. We work in small, reviewable steps.',
+  },
+  {
+    num: '04',
+    title: 'Built to be handed off.',
+    body: "The code is yours, documented and maintainable. We build software you could take elsewhere — that's how you know it's built right.",
+  },
+];
+
+const delayClass = ['', 'd1', 'd2', 'd3'];
+---
+
+<section class="block block-tint" id="how-we-work">
+  <div class="container">
+    <div class="section-head">
+      <h2 class="reveal">Nothing hidden.<br /><span class="amber">No surprises at the end.</span></h2>
+      <p class="lede reveal d1">Good software starts with understanding the work it's meant to support, so we start there too.</p>
+    </div>
+
+    <ol class="steps">
+      {steps.map((s, i) => (
+        <li class={`step reveal ${delayClass[i] ?? ''}`}>
+          <div class="step-rail">
+            <div class="num">{s.num}</div>
+          </div>
+          <div class="step-info">
+            <h3>{s.title}</h3>
+            <p>{s.body}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>
+
+<style>
+  .container { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--pad); }
+
+  .block { padding: 140px 0; }
+  .block-tint { background: var(--moss-50); }
+
+  .section-head { margin-bottom: 64px; max-width: 720px; }
+  .section-head h2 {
+    font-family: 'Rubik', sans-serif; font-weight: 600;
+    font-size: clamp(40px, 4.6vw, 56px);
+    line-height: 1.05; letter-spacing: -0.025em;
+    margin: 0; color: var(--bayou); max-width: 16ch;
+  }
+  .section-head h2 .amber { color: var(--amber-deep); }
+  .section-head .lede {
+    font-family: 'Manrope', sans-serif; font-weight: 400;
+    font-size: 19px; line-height: 1.55;
+    color: var(--ink-soft);
+    margin: 18px 0 0;
+    max-width: 56ch;
+  }
+
+  .steps {
+    list-style: none; padding: 0; margin: 0;
+    display: flex; flex-direction: column;
+    gap: 1px;
+    background: var(--silt);
+    border-top: 1px solid var(--silt);
+    border-bottom: 1px solid var(--silt);
+  }
+  .step {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 56px;
+    align-items: start;
+    background: var(--moss-50);
+    padding: 40px 0;
+  }
+  .step-rail .num {
+    font-family: 'Rubik', sans-serif; font-weight: 700;
+    font-size: 56px; line-height: 0.95; letter-spacing: -0.03em;
+    color: var(--moss-deep);
+  }
+  .step-info h3 {
+    font-family: 'Rubik', sans-serif; font-weight: 600;
+    font-size: 28px; line-height: 1.15; letter-spacing: -0.015em;
+    color: var(--bayou); margin: 0 0 12px;
+  }
+  .step-info p {
+    margin: 0; color: var(--ink-soft);
+    font-size: 17px; line-height: 1.55; max-width: 64ch;
+  }
+
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+  .reveal.d1 { transition-delay: .08s; }
+  .reveal.d2 { transition-delay: .16s; }
+  .reveal.d3 { transition-delay: .24s; }
+
+  @media (max-width: 900px) {
+    .step { grid-template-columns: 1fr; gap: 12px; padding: 32px 0; }
+    .step-rail .num { font-size: 40px; }
+  }
+</style>

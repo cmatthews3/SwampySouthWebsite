@@ -1,0 +1,58 @@
+---
+---
+
+<section class="block block-tint" id="who-we-are">
+  <div class="container">
+    <div class="layout">
+      <div class="left">
+        <h2 class="reveal">About <span class="amber">the studio.</span></h2>
+      </div>
+      <div class="right reveal d1">
+        <p>
+          <strong>Christopher Matthews</strong> started Swampy South Labs in New Orleans to do a particular kind of work: build software carefully, for people who'll actually depend on it.
+        </p>
+        <p>
+          He brings eight years of building enterprise software and XR platforms to the work — leading delivery at a Fortune 500 technology company, shipping production apps across mobile, web, and immersive platforms.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .container { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--pad); }
+
+  .block { padding: 140px 0; }
+  .block-tint { background: var(--moss-50); }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 80px;
+    align-items: start;
+  }
+
+  .left h2 {
+    font-family: 'Rubik', sans-serif; font-weight: 600;
+    font-size: clamp(40px, 4.6vw, 56px);
+    line-height: 1.05; letter-spacing: -0.025em;
+    margin: 0; color: var(--bayou); max-width: 12ch;
+  }
+  .left h2 .amber { color: var(--amber-deep); }
+
+  .right p {
+    margin: 0 0 20px; color: var(--ink-soft);
+    font-size: 19px; line-height: 1.6;
+    max-width: 56ch;
+  }
+  .right p:last-child { margin-bottom: 0; }
+  .right strong { color: var(--bayou); font-weight: 600; }
+
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+  .reveal.d1 { transition-delay: .08s; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; gap: 40px; }
+  }
+</style>
