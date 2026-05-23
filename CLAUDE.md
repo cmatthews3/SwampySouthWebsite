@@ -172,7 +172,7 @@ Subsequent pushes to the linked branch redeploy. The volume persists.
 
 ## Open items
 
-1. **"Who we are" placeholders**. The `WhoWeAre.astro` section ships with `[Founder name]` and `[One or two honest sentences on background and why.]` rendered visibly so they show up on the page until filled in. Replace before the site goes public. The copy brief calls this out as a real gap for a services buyer.
+1. **"Who we are" personal-background line**. `WhoWeAre.astro` has the founder name (Christopher Matthews) filled in but still ships with `[Personal background — one or two honest sentences about where you came from and why you started this.]` rendered visibly. Replace before the site goes public. The size-signaling copy from the original brief ("A small studio, on purpose" / "We stay small deliberately") was intentionally cut to match the project's "don't mention team size in either direction" voice rule.
 2. **Pricing anchor (optional)**. The services-led brief suggests one honest line in `HowWeWork.astro` ("Engagements typically start in the [X] range…"). Not included by default. Add it under the four numbered steps if you want a price anchor.
 3. **Labs demo links**. `src/pages/labs.astro` still points its "See it in action" CTAs at the raw dev URLs. Per the brief, swap these for a short demo video or polished screenshots before launch. A `TODO` comment in the page frontmatter flags this.
 4. **More-about-the-studio page**. The brief's "More about the studio →" CTA isn't wired in — there's no `/about` page yet. Either build one or drop the CTA.
