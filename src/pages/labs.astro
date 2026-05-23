@@ -53,13 +53,12 @@ const earlyDevelopment: LabsItem[] = [
 
   <header class="labs-hero">
     <div class="container">
-      <p class="eyebrow reveal in">// The Labs</p>
-      <h1 class="reveal in d1">The <span class="amber">Labs.</span></h1>
-      <p class="lede reveal in d2">
+      <h1 class="reveal in">The <span class="amber">Labs.</span></h1>
+      <p class="lede reveal in d1">
         The software we build for ourselves. Some of it becomes a product; all of it keeps us sharp. This is where we test what we believe about building software — on our own time and our own dime, with no client to answer to but the work itself.
       </p>
-      <p class="note reveal in d3">
-        // Names below are working titles. The products are real; the labels aren't final yet.
+      <p class="note reveal in d2">
+        Names below are working titles. The products are real; the labels aren't final yet.
       </p>
     </div>
   </header>
@@ -67,7 +66,6 @@ const earlyDevelopment: LabsItem[] = [
   <section class="block block-tint">
     <div class="container">
       <div class="group-head reveal">
-        <span class="tag">Group 01</span>
         <h2>In active pilots.</h2>
       </div>
 
@@ -98,7 +96,6 @@ const earlyDevelopment: LabsItem[] = [
   <section class="block block-light">
     <div class="container">
       <div class="group-head reveal">
-        <span class="tag">Group 02</span>
         <h2>In early development.</h2>
       </div>
 
@@ -176,12 +173,6 @@ const earlyDevelopment: LabsItem[] = [
     background: var(--bone);
     padding: calc(var(--nav-h) + 96px) 0 64px;
   }
-  .labs-hero .eyebrow {
-    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500;
-    letter-spacing: 0.05em;
-    color: var(--ink-soft);
-    margin: 0 0 24px;
-  }
   .labs-hero h1 {
     font-family: 'Rubik', sans-serif; font-weight: 700;
     font-size: clamp(56px, 8vw, 108px);
@@ -197,9 +188,9 @@ const earlyDevelopment: LabsItem[] = [
     margin: 0 0 16px;
   }
   .labs-hero .note {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px; font-weight: 500;
-    letter-spacing: 0.04em;
+    font-family: 'Manrope', sans-serif;
+    font-style: italic; font-size: 15px; font-weight: 400;
+    line-height: 1.55;
     color: var(--ink-soft);
     margin: 0;
   }
@@ -207,12 +198,6 @@ const earlyDevelopment: LabsItem[] = [
   /* Group headers */
   .group-head {
     margin-bottom: 56px;
-    display: flex; flex-direction: column; gap: 12px;
-  }
-  .group-head .tag {
-    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500;
-    letter-spacing: 0.05em; text-transform: uppercase;
-    color: var(--moss-deep);
   }
   .group-head h2 {
     font-family: 'Rubik', sans-serif; font-weight: 600;
