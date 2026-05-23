@@ -1,0 +1,333 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+
+// TODO: The `href` values on the active pilots currently point at the raw
+// dev URLs. Per the Labs-page brief, swap these for a short demo video or
+// polished screenshots once those exist (the page should not link to the
+// raw dev environment in production).
+type LabsItem = {
+  title: string;
+  category: string;
+  body: string;
+  status: string;
+  href?: string;
+};
+
+const activePilots: LabsItem[] = [
+  {
+    title: 'IEP Assist',
+    category: 'Education · AI',
+    body: "An AI drafting assistant for special-education teachers. Writing an Individualized Education Program is hours of compliance-heavy writing per student, on top of a full classroom. IEP Assist takes the draft from blank page to a strong first cut, so teachers can spend their energy on the parts that actually need a human.",
+    status: 'Piloting with a local public school.',
+    href: 'https://iepassistrepofrontend-dev.up.railway.app/',
+  },
+  {
+    title: 'Project Touchline',
+    category: 'Soccer · Operations',
+    body: "The operations layer for grassroots soccer. Division 4–7 amateur and semi-pro clubs are usually run by a tiny crew — owners and coaches doubling as manager, social lead, and equipment coordinator alongside a day job. Touchline pulls roster, schedule, social, sponsorships, and match-day logistics into one place, with AI that drafts posts and recaps in the club's own voice.",
+    status: 'Piloting with one club.',
+    href: 'https://socceroperationsassistant-production.up.railway.app/',
+  },
+];
+
+const earlyDevelopment: LabsItem[] = [
+  {
+    title: 'Project Winston',
+    category: 'Family · AI',
+    body: "A small, private AI for the household — calendar coordination, kid logistics, the everyday mental load of running a family. Genuinely useful without being creepy, and living somewhere that isn't a giant tech company's data center. The most exploratory of what we're building, and the one most likely to evolve as we learn what families actually want.",
+    status: 'Early concept.',
+  },
+  {
+    title: 'Project Reps',
+    category: 'Fitness · AI',
+    body: "An AI personal trainer for the average gym-goer — not the optimizer, not the part-time bodybuilder, just the person who wants to show up two or three times a week, do something reasonable, and not overthink it. Builds the session around what you have, how much time you have, and how you feel that day.",
+    status: 'Early concept.',
+  },
+];
+---
+
+<Layout title="The Labs — Swampy South Labs" description="The software we build for ourselves. Some of it becomes a product; all of it keeps us sharp.">
+  <Nav />
+
+  <header class="labs-hero">
+    <div class="container">
+      <p class="eyebrow reveal in">// The Labs</p>
+      <h1 class="reveal in d1">The <span class="amber">Labs.</span></h1>
+      <p class="lede reveal in d2">
+        The software we build for ourselves. Some of it becomes a product; all of it keeps us sharp. This is where we test what we believe about building software — on our own time and our own dime, with no client to answer to but the work itself.
+      </p>
+      <p class="note reveal in d3">
+        // Names below are working titles. The products are real; the labels aren't final yet.
+      </p>
+    </div>
+  </header>
+
+  <section class="block block-tint">
+    <div class="container">
+      <div class="group-head reveal">
+        <span class="tag">Group 01</span>
+        <h2>In active pilots.</h2>
+      </div>
+
+      <div class="lab-list">
+        {activePilots.map((p, i) => (
+          <article class={`lab-row reveal ${i === 0 ? '' : 'd1'}`}>
+            <div class="lab-rail">
+              <div class="lab-eyebrow">{p.category}</div>
+            </div>
+            <div class="lab-info">
+              <h3>{p.title}</h3>
+              <p>{p.body}</p>
+              <div class="footer-row">
+                <span class="status"><span class="dot"></span>{p.status}</span>
+                {p.href && (
+                  <a class="link" href={p.href} target="_blank" rel="noopener noreferrer">
+                    See it in action <span class="arrow">→</span>
+                  </a>
+                )}
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="block block-light">
+    <div class="container">
+      <div class="group-head reveal">
+        <span class="tag">Group 02</span>
+        <h2>In early development.</h2>
+      </div>
+
+      <div class="lab-list">
+        {earlyDevelopment.map((p, i) => (
+          <article class={`lab-row muted reveal ${i === 0 ? '' : 'd1'}`}>
+            <div class="lab-rail">
+              <div class="lab-eyebrow">{p.category}</div>
+            </div>
+            <div class="lab-info">
+              <h3>{p.title}</h3>
+              <p>{p.body}</p>
+              <div class="footer-row">
+                <span class="status muted"><span class="dot"></span>{p.status}</span>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="block close-band">
+    <div class="container">
+      <div class="close-inner reveal">
+        <h2>See something here you'd want built<br />for <span class="amber">your own work?</span></h2>
+        <p>The care we put into our own products is the same care we bring to client projects.</p>
+        <a class="btn btn-primary" href="/#contact">Start a project <span class="arrow">→</span></a>
+      </div>
+    </div>
+  </section>
+
+  <Footer />
+</Layout>
+
+<script>
+  // Reveal observer — same pattern as the homepage.
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in');
+          io.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.12, rootMargin: '0px 0px -40px 0px' },
+  );
+  document.querySelectorAll('.reveal').forEach((el) => {
+    if (!el.classList.contains('in')) io.observe(el);
+  });
+
+  document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((a) => {
+    a.addEventListener('click', (event) => {
+      const href = a.getAttribute('href');
+      if (!href || href.length <= 1) return;
+      const target = document.querySelector(href);
+      if (!target) return;
+      event.preventDefault();
+      const top = target.getBoundingClientRect().top + window.scrollY - 60;
+      window.scrollTo({ top, behavior: 'smooth' });
+    });
+  });
+</script>
+
+<style>
+  .container { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--pad); }
+
+  .block { padding: 120px 0; }
+  .block-light { background: var(--bone); }
+  .block-tint { background: var(--moss-50); }
+
+  /* Labs hero */
+  .labs-hero {
+    background: var(--bone);
+    padding: calc(var(--nav-h) + 96px) 0 64px;
+  }
+  .labs-hero .eyebrow {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    margin: 0 0 24px;
+  }
+  .labs-hero h1 {
+    font-family: 'Rubik', sans-serif; font-weight: 700;
+    font-size: clamp(56px, 8vw, 108px);
+    line-height: 0.95; letter-spacing: -0.035em;
+    color: var(--bayou); margin: 0 0 32px;
+  }
+  .labs-hero h1 .amber { color: var(--amber-deep); }
+  .labs-hero .lede {
+    font-family: 'Manrope', sans-serif; font-weight: 400;
+    font-size: 21px; line-height: 1.55;
+    color: var(--ink-soft);
+    max-width: 64ch;
+    margin: 0 0 16px;
+  }
+  .labs-hero .note {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  /* Group headers */
+  .group-head {
+    margin-bottom: 56px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .group-head .tag {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--moss-deep);
+  }
+  .group-head h2 {
+    font-family: 'Rubik', sans-serif; font-weight: 600;
+    font-size: clamp(36px, 4.2vw, 48px);
+    line-height: 1.05; letter-spacing: -0.025em;
+    color: var(--bayou); margin: 0;
+  }
+
+  /* Lab cards */
+  .lab-list { display: flex; flex-direction: column; gap: 24px; }
+  .lab-row {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 48px;
+    align-items: start;
+    background: var(--bone);
+    border: 1px solid var(--silt);
+    padding: 40px;
+    transition: transform var(--t-med), box-shadow var(--t-med);
+  }
+  .block-light .lab-row { background: var(--moss-50); }
+  .lab-row:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 24px 48px -24px rgba(26, 31, 18, 0.18);
+  }
+  .lab-row.muted:hover { box-shadow: 0 16px 32px -24px rgba(26, 31, 18, 0.12); }
+  .lab-rail .lab-eyebrow {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .lab-info { display: flex; flex-direction: column; gap: 14px; }
+  .lab-info h3 {
+    font-family: 'Rubik', sans-serif; font-weight: 600;
+    font-size: 32px; line-height: 1.1; letter-spacing: -0.02em;
+    color: var(--bayou); margin: 0;
+  }
+  .lab-info p {
+    margin: 0; color: var(--ink-soft);
+    font-size: 17px; line-height: 1.55; max-width: 64ch;
+  }
+  .lab-info .footer-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; margin-top: 8px;
+    padding-top: 20px; border-top: 1px solid var(--silt);
+    flex-wrap: wrap;
+  }
+  .lab-info .status {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--moss-deep);
+  }
+  .lab-info .status .dot { width: 7px; height: 7px; background: var(--moss); border-radius: 50%; }
+  .lab-info .status.muted { color: var(--ink-soft); }
+  .lab-info .status.muted .dot { background: var(--silt); }
+  .lab-info .link {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'Rubik', sans-serif; font-weight: 600; font-size: 14px;
+    color: var(--moss-deep);
+    transition: color var(--t-fast);
+  }
+  .lab-info .link:hover { color: var(--amber-deep); }
+  .lab-info .link .arrow {
+    font-family: 'JetBrains Mono', monospace; font-weight: 400;
+    transition: transform var(--t-fast);
+  }
+  .lab-info .link:hover .arrow { transform: translateX(3px); }
+
+  /* Closing band */
+  .close-band {
+    background: var(--moss-deep);
+    color: var(--bone);
+    padding: 120px 0;
+  }
+  .close-inner { max-width: 760px; }
+  .close-inner h2 {
+    font-family: 'Rubik', sans-serif; font-weight: 600;
+    font-size: clamp(36px, 4.4vw, 52px);
+    line-height: 1.05; letter-spacing: -0.025em;
+    color: var(--bone); margin: 0 0 24px;
+  }
+  .close-inner h2 .amber { color: var(--amber-warm); }
+  .close-inner p {
+    font-family: 'Manrope', sans-serif; font-weight: 400;
+    font-size: 19px; line-height: 1.55;
+    color: rgba(245, 241, 230, 0.85);
+    margin: 0 0 32px;
+    max-width: 56ch;
+  }
+  .close-inner .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: 'Rubik', sans-serif; font-weight: 600;
+    font-size: 14px; padding: 13px 22px;
+    border: none; cursor: pointer; text-decoration: none;
+    transition: all var(--t-fast);
+    letter-spacing: -0.005em;
+  }
+  .close-inner .btn .arrow {
+    font-family: 'JetBrains Mono', monospace; font-weight: 400;
+    transition: transform var(--t-fast);
+  }
+  .close-inner .btn:hover .arrow { transform: translateX(3px); }
+  .close-inner .btn-primary { background: var(--amber); color: var(--bayou); }
+  .close-inner .btn-primary:hover { background: var(--amber-warm); }
+
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+  .reveal.d1 { transition-delay: .08s; }
+  .reveal.d2 { transition-delay: .16s; }
+  .reveal.d3 { transition-delay: .24s; }
+
+  @media (max-width: 900px) {
+    .lab-row { grid-template-columns: 1fr; gap: 16px; padding: 28px; }
+    .labs-hero { padding: calc(var(--nav-h) + 64px) 0 48px; }
+    .close-band { padding: 96px 0; }
+  }
+</style>

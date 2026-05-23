@@ -1,14 +1,18 @@
 ---
 const year = new Date().getFullYear();
+const pathname = Astro.url.pathname;
+const onLabs = pathname === '/labs' || pathname === '/labs/';
+const home = (anchor: string) => (onLabs ? `/${anchor}` : anchor);
 ---
 
 <footer>
   <div class="row">
     <div class="name">Swampy South <span class="amber">Labs</span></div>
     <ul>
-      <li><a href="#products">Products</a></li>
-      <li><a href="#services">Services</a></li>
-      <li><a href="#contact">Contact</a></li>
+      <li><a href={home('#services')}>Services</a></li>
+      <li><a href={home('#how-we-work')}>How we work</a></li>
+      <li><a href="/labs">Labs</a></li>
+      <li><a href={home('#contact')}>Contact</a></li>
     </ul>
   </div>
   <div class="copy">

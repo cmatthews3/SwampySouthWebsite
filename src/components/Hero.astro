@@ -6,9 +6,10 @@
     <div class="hero-inner">
       <div class="hero-text">
         <h1 class="reveal in d1">Measured software<br />for the <span class="amber">work that matters.</span></h1>
-        <div class="hero-actions reveal in d2">
-          <a class="btn btn-primary" href="#contact">Get in touch <span class="arrow">→</span></a>
-          <a class="btn btn-ghost" href="#products">See what we're building</a>
+        <p class="lede reveal in d2">An independent software studio in New Orleans. We build the custom software your business actually runs on — internal tools, customer portals, mobile apps, and the workflows that long ago outgrew the spreadsheet.</p>
+        <div class="hero-actions reveal in d3">
+          <a class="btn btn-primary" href="#contact">Start a project <span class="arrow">→</span></a>
+          <a class="btn btn-ghost" href="#how-we-work">See how we work</a>
         </div>
       </div>
     </div>
@@ -39,6 +40,13 @@
     color: var(--bone); margin: 0 0 36px;
   }
   .hero-text h1 .amber { color: var(--amber-warm); }
+  .hero-text .lede {
+    font-family: 'Manrope', sans-serif; font-weight: 400;
+    font-size: 20px; line-height: 1.55;
+    color: rgba(245, 241, 230, 0.85);
+    max-width: 640px;
+    margin: 0 0 32px;
+  }
   .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: flex-start; }
 
   /* Faint giant mark watermark behind the hero text */
@@ -79,6 +87,7 @@
   .reveal.in { opacity: 1; transform: none; }
   .reveal.d1 { transition-delay: .08s; }
   .reveal.d2 { transition-delay: .16s; }
+  .reveal.d3 { transition-delay: .24s; }
 
   @media (max-width: 900px) {
     .hero { padding: calc(var(--nav-h) + 64px) 0 80px; }

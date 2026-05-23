@@ -1,0 +1,68 @@
+---
+// TODO: Fill in the founder name and the bracketed bio line below, then
+// remove this comment. The bracketed placeholders render visibly in the
+// page so they're easy to spot when reviewing.
+---
+
+<section class="block block-tint" id="who-we-are">
+  <div class="container">
+    <div class="layout">
+      <div class="left">
+        <p class="eyebrow reveal">// Who we are</p>
+        <h2 class="reveal d1">A small studio,<br /><span class="amber">on purpose.</span></h2>
+      </div>
+      <div class="right reveal d2">
+        <p>
+          <strong>[Founder name]</strong> started Swampy South Labs in New Orleans to do a particular kind of work: build software carefully, for people who'll actually depend on it, without the churn and overhead of a big shop. [One or two honest sentences on background and why.]
+        </p>
+        <p>
+          We stay small deliberately. It means the people you talk to are the people building your software.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .container { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--pad); }
+
+  .block { padding: 140px 0; }
+  .block-tint { background: var(--moss-50); }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 80px;
+    align-items: start;
+  }
+
+  .left .eyebrow {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft); margin: 0 0 24px;
+  }
+  .left h2 {
+    font-family: 'Rubik', sans-serif; font-weight: 600;
+    font-size: clamp(40px, 4.6vw, 56px);
+    line-height: 1.05; letter-spacing: -0.025em;
+    margin: 0; color: var(--bayou); max-width: 12ch;
+  }
+  .left h2 .amber { color: var(--amber-deep); }
+
+  .right p {
+    margin: 0 0 20px; color: var(--ink-soft);
+    font-size: 19px; line-height: 1.6;
+    max-width: 56ch;
+  }
+  .right p:last-child { margin-bottom: 0; }
+  .right strong { color: var(--bayou); font-weight: 600; }
+
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+  .reveal.d1 { transition-delay: .08s; }
+  .reveal.d2 { transition-delay: .16s; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; gap: 40px; }
+  }
+</style>

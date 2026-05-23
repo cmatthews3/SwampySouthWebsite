@@ -1,0 +1,118 @@
+---
+type Pilot = { title: string; body: string; status: string };
+
+const pilots: Pilot[] = [
+  {
+    title: 'IEP Assist',
+    body: 'An AI drafting assistant helping special-education teachers get from blank page to a strong first draft.',
+    status: 'Piloting with a local public school.',
+  },
+  {
+    title: 'Project Touchline',
+    body: 'The operations layer for grassroots soccer clubs run by a tiny crew.',
+    status: 'Piloting with one club.',
+  },
+];
+---
+
+<section class="block block-light" id="labs">
+  <div class="container">
+    <div class="section-head">
+      <h2 class="reveal">We don't only build for clients.<br /><span class="amber">We build and run our own products.</span></h2>
+      <p class="lede reveal d1">It keeps our craft sharp and our judgment honest — we feel every decision we'd otherwise only recommend. Two are in active pilots right now:</p>
+    </div>
+
+    <div class="pilots">
+      {pilots.map((p, i) => (
+        <article class={`pilot reveal ${i === 0 ? '' : 'd1'}`}>
+          <h3>{p.title}</h3>
+          <p>{p.body}</p>
+          <span class="status"><span class="dot"></span>{p.status}</span>
+        </article>
+      ))}
+    </div>
+
+    <a class="labs-link reveal d2" href="/labs">
+      See what we build in the Labs <span class="arrow">→</span>
+    </a>
+  </div>
+</section>
+
+<style>
+  .container { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--pad); }
+
+  .block { padding: 140px 0; }
+  .block-light { background: var(--bone); }
+
+  .section-head { margin-bottom: 48px; max-width: 760px; }
+  .section-head h2 {
+    font-family: 'Rubik', sans-serif; font-weight: 600;
+    font-size: clamp(36px, 4.2vw, 52px);
+    line-height: 1.05; letter-spacing: -0.025em;
+    margin: 0; color: var(--bayou); max-width: 22ch;
+  }
+  .section-head h2 .amber { color: var(--amber-deep); }
+  .section-head .lede {
+    font-family: 'Manrope', sans-serif; font-weight: 400;
+    font-size: 19px; line-height: 1.55;
+    color: var(--ink-soft);
+    margin: 18px 0 0;
+    max-width: 56ch;
+  }
+
+  .pilots {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-bottom: 40px;
+  }
+  .pilot {
+    display: flex; flex-direction: column;
+    background: var(--moss-50);
+    border: 1px solid var(--silt);
+    padding: 32px;
+    gap: 14px;
+  }
+  .pilot h3 {
+    font-family: 'Rubik', sans-serif; font-weight: 600;
+    font-size: 24px; line-height: 1.15; letter-spacing: -0.015em;
+    color: var(--bayou); margin: 0;
+  }
+  .pilot p {
+    margin: 0; color: var(--ink-soft);
+    font-size: 16px; line-height: 1.55;
+  }
+  .pilot .status {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--moss-deep);
+  }
+  .pilot .status .dot { width: 7px; height: 7px; background: var(--moss); border-radius: 50%; }
+
+  .labs-link {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: 'Rubik', sans-serif; font-weight: 600; font-size: 16px;
+    color: var(--moss-deep);
+    border-bottom: 1.5px solid var(--silt);
+    padding-bottom: 4px;
+    transition: color var(--t-fast), border-color var(--t-fast);
+  }
+  .labs-link:hover { color: var(--amber-deep); border-color: var(--amber-deep); }
+  .labs-link .arrow {
+    font-family: 'JetBrains Mono', monospace; font-weight: 400;
+    transition: transform var(--t-fast);
+  }
+  .labs-link:hover .arrow { transform: translateX(3px); }
+
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+  .reveal.d1 { transition-delay: .08s; }
+  .reveal.d2 { transition-delay: .16s; }
+
+  @media (max-width: 900px) {
+    .pilots { grid-template-columns: 1fr; }
+    .pilot { padding: 24px; }
+  }
+</style>
