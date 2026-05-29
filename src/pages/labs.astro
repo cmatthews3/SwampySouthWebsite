@@ -11,7 +11,6 @@ type LabsItem = {
   title: string;
   category: string;
   body: string;
-  status: string;
   href?: string;
 };
 
@@ -20,14 +19,12 @@ const activePilots: LabsItem[] = [
     title: 'IEP Assist',
     category: 'Education · AI',
     body: "An AI drafting assistant for special-education teachers. Writing an Individualized Education Program is hours of compliance-heavy writing per student, on top of a full classroom. IEP Assist takes the draft from blank page to a strong first cut, so teachers can spend their energy on the parts that actually need a human.",
-    status: 'Piloting with a local public school.',
     href: 'https://iepassistrepofrontend-dev.up.railway.app/',
   },
   {
     title: 'Project Touchline',
     category: 'Soccer · Operations',
     body: "The operations layer for grassroots soccer. Division 4–7 amateur and semi-pro clubs are usually run by a tiny crew — owners and coaches doubling as manager, social lead, and equipment coordinator alongside a day job. Touchline pulls roster, schedule, social, sponsorships, and match-day logistics into one place, with AI that drafts posts and recaps in the club's own voice.",
-    status: 'Piloting with one club.',
     href: 'https://socceroperationsassistant-production.up.railway.app/',
   },
 ];
@@ -37,13 +34,11 @@ const earlyDevelopment: LabsItem[] = [
     title: 'Project Winston',
     category: 'Family · AI',
     body: "A small, private AI for the household — calendar coordination, kid logistics, the everyday mental load of running a family. Genuinely useful without being creepy, and living somewhere that isn't a giant tech company's data center. The most exploratory of what we're building, and the one most likely to evolve as we learn what families actually want.",
-    status: 'Early concept.',
   },
   {
     title: 'Project Reps',
     category: 'Fitness · AI',
     body: "An AI personal trainer for the average gym-goer — not the optimizer, not the part-time bodybuilder, just the person who wants to show up two or three times a week, do something reasonable, and not overthink it. Builds the session around what you have, how much time you have, and how you feel that day.",
-    status: 'Early concept.',
   },
 ];
 ---
@@ -79,7 +74,6 @@ const earlyDevelopment: LabsItem[] = [
               <h3>{p.title}</h3>
               <p>{p.body}</p>
               <div class="footer-row">
-                <span class="status"><span class="dot"></span>{p.status}</span>
                 {p.href && (
                   <a class="link" href={p.href} target="_blank" rel="noopener noreferrer">
                     See it in action <span class="arrow">→</span>
@@ -109,7 +103,6 @@ const earlyDevelopment: LabsItem[] = [
               <h3>{p.title}</h3>
               <p>{p.body}</p>
               <div class="footer-row">
-                <span class="status muted"><span class="dot"></span>{p.status}</span>
               </div>
             </div>
           </article>
