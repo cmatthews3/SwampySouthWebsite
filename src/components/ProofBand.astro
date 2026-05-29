@@ -1,16 +1,14 @@
 ---
-type Pilot = { title: string; body: string; status: string };
+type Pilot = { title: string; body: string;};
 
 const pilots: Pilot[] = [
   {
     title: 'IEP Assist',
     body: 'An AI drafting assistant helping special-education teachers get from blank page to a strong first draft.',
-    status: 'Piloting with a local public school.',
   },
   {
     title: 'Project Touchline',
     body: 'The operations layer for grassroots soccer clubs run by a tiny crew.',
-    status: 'Piloting with one club.',
   },
 ];
 ---
@@ -27,7 +25,6 @@ const pilots: Pilot[] = [
         <article class={`pilot reveal ${i === 0 ? '' : 'd1'}`}>
           <h3>{p.title}</h3>
           <p>{p.body}</p>
-          <span class="status"><span class="dot"></span>{p.status}</span>
         </article>
       ))}
     </div>
